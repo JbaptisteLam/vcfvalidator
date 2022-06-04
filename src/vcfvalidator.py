@@ -123,7 +123,7 @@ class Checkheader:
         return
 
     def add_row(self, field, id, number, type, description, **kwargs):
-        self.header["header"].append(
+        row_add = (
             "##"
             + field
             + "=<"
@@ -137,12 +137,14 @@ class Checkheader:
             )
             + '">'
         )
+        print("#[INFO] Adding " + row_add + " in header")
+        self.header["header"].append(row_add)
 
     def remove_row(self):
-        for rows in self.rm:
-            index = self.matchingline()
-            if index:
-                del self.header[index]
+        index = self.matchingline()
+        if index:
+            print("#[INFO] Removing " + index + " from header")
+            del self.header[index]
 
     def matching_line(self, field, id):
         """
@@ -155,9 +157,6 @@ class Checkheader:
             if x:
                 matching.extend(x)
         if not matching:
-            print(
-                "WARNING '" + field + "." + id + "' does not match any row in header "
-            )
             return []
         elif len(matching) > 1:
             print(
@@ -165,7 +164,7 @@ class Checkheader:
                 + field
                 + "."
                 + id
-                + "' got more than one match check, verify your header"
+                + "' got more than one match, verify your header"
             )
             return []
 
@@ -179,9 +178,9 @@ class Checkheader:
         val = id.split(".")[1]
         # if more than one line matching or no matching return empty list and do not process anything
         row_match = self.matching_line(key, val)
-        print(row_match)
+        # print(row_match)
         if row_match:
-            print(id, fields)
+            # print(id, fields)
             dico_val = {}
             # explode old header row
             for f in re.search(r"<(.*?)>", row_match[0]).group(1).split(","):
@@ -199,14 +198,22 @@ class Checkheader:
                 + ",".join(["=".join([s, r]) for s, r in dico_val.items()])
                 + ">"
             )
-            print(row_process)
-
+            # print(row_process)
+            print("#[INFO] Edit index " + key + "." + val + " return " + row_process)
             # print(dico_val)
             self.header["header"] = list(
                 map(
                     lambda x: x.replace(row_match[0], row_process),
                     self.header["header"],
                 )
+            )
+        else:
+            print(
+                "WARNING '"
+                + key
+                + "."
+                + val
+                + "' does not match any row in header PASS"
             )
 
     def remove_whole(self):
@@ -219,13 +226,16 @@ class Checkheader:
         self.check_integrity()
         for actions, values in self.dico_args.items():
             ##if user need adding row
-            # if actions == "add" and values:
-            #    for rows in values:
-            #        self.add_row(*rows)
-            #        print(self.header)
+            if actions == "add" and values:
+                for rows in values:
+                    if not self.matching_line(rows[0], rows[1]):
+                        self.add_row(*rows)
             if actions == "edit" and values:
                 for key, rows in values.items():
                     self.edit_row(key, rows)
+            if actions == "remove" and values:
+                for rows in values:
+                    self.remove_row(*rows)
 
         print(self.header)
         # if self.rmwhole:

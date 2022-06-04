@@ -1,13 +1,12 @@
 # aim: validator de vcf avec vcf en db sqlite pour les variants
 
-from multiprocessing.sharedctypes import Value
 from os import remove
-import argparse
 import pandas as pd
 import subprocess
 import sys
 import re
 from os.path import join as osj
+from parseargs import parseargs
 
 # from sqlalchemy import create_engine
 
@@ -200,31 +199,6 @@ class VCFpreprocess:
         return self.df, self.header
         # def dfTosql(df, con, dico):
         #    return
-
-
-def parseargs():
-    parser = argparse.ArgumentParser(
-        description="Filter tsv in DPNI and POOL context, basically tsv have to come from varank analysis "
-    )
-    parser.add_argument(
-        "-i",
-        "--vcf",
-        type=str,
-        help="Absolute path of input file, should be vcf but may miss columns like sample or format, script will be handle this",
-    )
-    subparsers = parser.add_subparsers(dest="command")
-    parser_add = subparsers.add_parser(
-        "add", help="a help", formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser_add.add_argument(
-        "-v",
-        "--values",
-        type=str,
-        help="value to add in header",
-    )
-
-    args = parser.parse_args()
-    return args
 
 
 def main():

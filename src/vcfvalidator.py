@@ -1,12 +1,16 @@
 # aim: validator de vcf avec vcf en db sqlite pour les variants
 
-from os import remove
-import pandas as pd
+import json
+import os
+import re
 import subprocess
 import sys
-import json
-import re
+from os import remove
 from os.path import join as osj
+
+import pandas as pd
+
+from dbvar.database import Databasevar as dbv
 from validator.parseargs import Parseoptions
 
 # from sqlalchemy import create_engine
@@ -31,6 +35,39 @@ from validator.parseargs import Parseoptions
 #    "fields": {},
 #    "variants": {},
 # }
+
+
+def var_to_dataframe(vcf, skiprows, columns):
+    """
+    from tsv file to pandas dataframe, skiprows number of row to reach header, columns: col which need change (from , to .) to allowed excel filter
+    """
+    if skiprows:
+        df = pd.read_csv(
+            vcf,
+            skiprows=skiprows,
+            sep="\t",
+            header=0,
+            # chunksize=10000,
+            # low_memory=False,
+        )
+    else:
+        df = pd.read_csv(
+            vcf,
+            sep="\t",
+            header=0,
+            # chunksize=10000,
+            # low_memory=False,
+        )
+    # if "index" in df:
+    #    df = df.drop(columns="index")
+    if columns:
+        for col in columns:
+            if col in df.columns:
+                df[col] = df[col].apply(lambda x: x.replace(",", "."))
+                df[col] = df[col].astype(float)
+    print(df)
+    return df
+
 
 # utils
 def preprocess_vcf(file):
@@ -247,43 +284,22 @@ class VCFpreprocess:
         self.vcf = vcf
         # self.config = config
         self.header, self.skiprows = preprocess_vcf(self.vcf)
-        self.df = self.var_to_dataframe(self.skiprows, columns=False)
-
-    def var_to_dataframe(self, skiprows, columns):
-        """
-        from tsv file to pandas dataframe, skiprows number of row to reach header, columns: col which need change (from , to .) to allowed excel filter
-        """
-        if skiprows:
-            df = pd.read_csv(
-                self.vcf,
-                skiprows=skiprows,
-                sep="\t",
-                header=0,
-                chunksize=10000,
-                low_memory=False,
-            )
-        else:
-            df = pd.read_csv(
-                self.vcf,
-                sep="\t",
-                header=0,
-                chunksize=10000,
-                low_memory=False,
-            )
-        # if "index" in df:
-        #    df = df.drop(columns="index")
-        if columns:
-            for col in columns:
-                if col in df.columns:
-                    df[col] = df[col].apply(lambda x: x.replace(",", "."))
-                    df[col] = df[col].astype(float)
-        return df
+        self.df = var_to_dataframe(self.vcf, self.skiprows, columns=False)
 
     def get_values(self):
+        print(self.df)
         return self.df, self.header
 
         # def dfTosql(df, con, dico):
         #    return
+
+
+def cast_config(config):
+    conf = read_json(config)
+    result = []
+    for key, values in conf["variants"]["cast"].items():
+        result.append(key + " " + values)
+    return ", ".join(result)
 
 
 def main():
@@ -296,9 +312,20 @@ def main():
     # Load vcf file
     vcf = VCFpreprocess(args.vcf)
     variants, header = vcf.get_values()
+    if dico_args:
+        headercheck = Checkheader(header, dico_args, args.config)
+        headercheck.process()
 
-    headercheck = Checkheader(header, dico_args, args.config)
-    headercheck.process()
+    # worked
+    # tablename = "variants"
+    # dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
+    # dbv(variants, dbname, os.path.basename(args.vcf)).request(
+    #    "CREATE TABLE IF NOT EXISTS "
+    #    + tablename
+    #    + " ("
+    #    + cast_config(args.config)
+    #    + ")"
+    # )
 
     #    vcf = VCFpreprocess(args.vcf, arg)
     #    df, header = vcf.getvalues()

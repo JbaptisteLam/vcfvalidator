@@ -6,34 +6,35 @@ class Parseoptions:
         self.args = self.parseargs()
 
     def extract(self):
-        # for items
-        dico = {"add": [], "remove": [], "edit": {}}
-        if self.args.add:
-            # add new row could be pass more than one row to add format 5fields(field,ID,number,type,description), 5 fields and so on
-            for values in self.args.add.split(";"):
-                dico["add"].append(values.split(","))
-        if self.args.remove:
-            # remove row could be pass more than one row to remove format 2fields(field, ID)
-            for values in self.args.add.split(";"):
-                dico["remove"].append(values.split(","))
-        if self.args.edit:
-            # remove row could be pass more than one row to edit format 2fields(field.ID) to find which row to edit
-            # then add field needed to be replace and the new entry like so INFO.gene|Type:Integer;   (change old type to integer)
-            # or for multiple field INFO.gene|Type:Integer,Descritpion:newdescription;....
-            edit = dico["edit"]
-            # split if there are more than one edit
-            for n_rows in self.args.edit.split(";"):
-                rows = n_rows.split("|")[0]
-                values = n_rows.split("|")[1]
-                edit[rows] = {}
-                for field in values.split(","):
-                    key = field.split(":")[0]
-                    val = field.split(":")[1]
-                    edit[rows][key] = val
+        if self.args.command == "Annotate":
+            # for items
+            dico = {"add": [], "remove": [], "edit": {}}
+            if self.args.add:
+                # add new row could be pass more than one row to add format 5fields(field,ID,number,type,description), 5 fields and so on
+                for values in self.args.add.split(";"):
+                    dico["add"].append(values.split(","))
+            if self.args.remove:
+                # remove row could be pass more than one row to remove format 2fields(field, ID)
+                for values in self.args.add.split(";"):
+                    dico["remove"].append(values.split(","))
+            if self.args.edit:
+                # remove row could be pass more than one row to edit format 2fields(field.ID) to find which row to edit
+                # then add field needed to be replace and the new entry like so INFO.gene|Type:Integer;   (change old type to integer)
+                # or for multiple field INFO.gene|Type:Integer,Descritpion:newdescription;....
+                edit = dico["edit"]
+                # split if there are more than one edit
+                for n_rows in self.args.edit.split(";"):
+                    rows = n_rows.split("|")[0]
+                    values = n_rows.split("|")[1]
+                    edit[rows] = {}
+                    for field in values.split(","):
+                        key = field.split(":")[0]
+                        val = field.split(":")[1]
+                        edit[rows][key] = val
 
-        # dico["vcf"] = self.args.vcf
-        # dico["config"] = self.args.config
-        return dico
+            # dico["vcf"] = self.args.vcf
+            # dico["config"] = self.args.config
+            return dico
 
     def parseargs(self):
         parser = argparse.ArgumentParser(
@@ -64,18 +65,21 @@ class Parseoptions:
         parser_annotate.add_argument(
             "-a",
             "--add",
+            default="",
             type=str,
             help="value to add in header",
         ),
         parser_annotate.add_argument(
             "-e",
             "--edit",
+            default="",
             type=str,
             help="edit value in header",
         ),
         parser_annotate.add_argument(
             "-rm",
             "--remove",
+            default="",
             type=str,
             help="remove row in header by field, ID pair",
         )
@@ -93,4 +97,5 @@ class Parseoptions:
     def get_args(self):
         # print("#[INFO] args ", self.parseargs())
         # print(type(self.parseargs()))
+        print(self.parseargs())
         return self.extract(), self.parseargs()

@@ -6,7 +6,7 @@ import subprocess
 import sys
 import re
 from os.path import join as osj
-from parseargs import parseargs
+from validator.parseargs import Parseoptions
 
 # from sqlalchemy import create_engine
 
@@ -32,7 +32,7 @@ from parseargs import parseargs
 # }
 
 # utils
-def preprocessvcf(file):
+def preprocess_vcf(file):
     """
     from vcf file as input
     return dico with 2 lists, header with each row from header and field which contain the vcf header field,
@@ -70,16 +70,8 @@ def systemcall(command):
     )
 
 
-def wintounix(input, output):
+def win_to_unix(input, output):
     return systemcall('awk \'{ sub("\r$", ""); print }\' ' + input + " > " + output)
-
-
-class Parseoptions:
-    def __init__(self, config):
-        self.config = config
-
-    def extract(self):
-        return self.config.split(",")
 
 
 class Checkheader:
@@ -94,11 +86,14 @@ class Checkheader:
         # self.edit = self.config["edit"]
         # self.rmwhole = self.config["rmall"]
 
-    def addassembly(self):
+    def check_integrity(self):
+        pass
+
+    def add_assembly(self):
         # need install of gatk
         return
 
-    def addrow(self, field, id, number, type, description, **kwargs):
+    def add_row(self, field, id, number, type, description, **kwargs):
         self.header.append(
             "##"
             + field
@@ -114,13 +109,13 @@ class Checkheader:
             + ">"
         )
 
-    def removerow(self):
+    def remove_row(self):
         for rows in self.rm:
             index = self.matchingline()
             if index:
                 del self.header[index]
 
-    def matchingline(self, field, id):
+    def matching_line(self, field, id):
         """
         return index of row in global header
         """
@@ -133,13 +128,13 @@ class Checkheader:
             print("WARNING " + field + " ," + id + " does not match any row in header")
         return matching[0]
 
-    def editrow(self):
+    def edit_row(self):
         """
         edit only one row loop is in class.process func
         """
         return
 
-    def removewhole(self):
+    def remove_whole(self):
         print("#[INFO] Clear whole header")
         self.header.clear()
 
@@ -162,10 +157,10 @@ class VCFpreprocess:
     def __init__(self, vcf, config):
         self.vcf = vcf
         self.config = config
-        self.header, self.skiprows = preprocessvcf(self.vcf)
+        self.header, self.skiprows = preprocess_vcf(self.vcf)
         self.df = self.vartodataframe(self.skiprows, columns=False)
 
-    def vartodataframe(self, skiprows, columns):
+    def var_to_dataframe(self, skiprows, columns):
         """
         from tsv file to pandas dataframe, skiprows number of row to reach header, columns: col which need change (from , to .) to allowed excel filter
         """
@@ -195,22 +190,34 @@ class VCFpreprocess:
                     df[col] = df[col].astype(float)
         return df
 
-    def getvalues(self):
+    def get_values(self):
         return self.df, self.header
+
         # def dfTosql(df, con, dico):
         #    return
 
 
 def main():
-    args = parseargs()
-    opt = Parseoptions(args.values)
-    arg = opt.extract()
-    if args.command == "add":
-        vcf = VCFpreprocess(args.vcf, arg)
-        df, header = vcf.getvalues()
-        dico = {"add": [arg]}
-        pheader = Checkheader(header, dico)
-        print(pheader.process())
+    opt = Parseoptions()
+    # return options parsed in dico format and argparse.Namespace respectively
+    dico_args, args = opt.get_args()
+    # print(args)
+    # get options parser and process
+
+    # Load vcf file
+    vcf = VCFpreprocess(args.vcf, args.config)
+    variants, header = vcf.get_values()
+
+    # Act on header vcf
+    for actions, values in dico_args.items():
+        #    #if user need adding row
+        if actions == "add" and values:
+            pass
+    #    vcf = VCFpreprocess(args.vcf, arg)
+    #    df, header = vcf.getvalues()
+    #    dico = {"add": [arg]}
+    #    pheader = Checkheader(header, dico)
+    #    print(pheader.process())
 
 
 if __name__ == "__main__":

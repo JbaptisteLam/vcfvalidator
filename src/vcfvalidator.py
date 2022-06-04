@@ -1,15 +1,20 @@
 # aim: validator de vcf avec vcf en db sqlite pour les variants
 
-import json
+
 import os
 import re
-import subprocess
 import sys
 from os import remove
 from os.path import join as osj
-
+from utils.utils import (
+    read_json,
+    preprocess_vcf,
+    var_to_dataframe,
+    parse_sample_field,
+    parse_info_field,
+    systemcall,
+)
 import pandas as pd
-
 from dbvar.database import Databasevar as dbv
 from validator.parseargs import Parseoptions
 
@@ -35,88 +40,6 @@ from validator.parseargs import Parseoptions
 #    "fields": {},
 #    "variants": {},
 # }
-
-
-def var_to_dataframe(vcf, skiprows, columns):
-    """
-    from tsv file to pandas dataframe, skiprows number of row to reach header, columns: col which need change (from , to .) to allowed excel filter
-    """
-    if skiprows:
-        df = pd.read_csv(
-            vcf,
-            skiprows=skiprows,
-            sep="\t",
-            header=0,
-            # chunksize=10000,
-            # low_memory=False,
-        )
-    else:
-        df = pd.read_csv(
-            vcf,
-            sep="\t",
-            header=0,
-            # chunksize=10000,
-            # low_memory=False,
-        )
-    # if "index" in df:
-    #    df = df.drop(columns="index")
-    if columns:
-        for col in columns:
-            if col in df.columns:
-                df[col] = df[col].apply(lambda x: x.replace(",", "."))
-                df[col] = df[col].astype(float)
-    print(df)
-    return df
-
-
-# utils
-def preprocess_vcf(file):
-    """
-    from vcf file as input
-    return dico with 2 lists, header with each row from header and field which contain the vcf header field,
-            and number of row of header (without field)
-    """
-    data = {}
-    skip = []
-    with open(file, "r") as f:
-        data["header"] = []
-        for i, lines in enumerate(f):
-            if lines.split("\t")[0] != "#CHROM":
-                data["header"].append(lines.strip())
-            else:
-                print(lines)
-                data["fields"] = lines.strip().split("\t")
-                skip.append(i)
-                break
-    return data, skip[0]
-
-
-def systemcall(command):
-    """
-    Passing command to the shell, return first item in list containing stdout lines
-    """
-    try:
-        print("#[INFO] " + command)
-        p = subprocess.check_output([command], shell=True)
-    except subprocess.CalledProcessError as err:
-        sys.exit("ERROR " + str(err.returncode))
-    return (
-        subprocess.Popen([command], stdout=subprocess.PIPE, shell=True)
-        .stdout.read()
-        .decode("utf8")
-        .strip()
-        .split("\n")[0]
-    )
-
-
-def read_json(file):
-    with open(file, "r") as jsonFile:
-        jconf = json.load(jsonFile)
-        return jconf
-
-
-def win_to_unix(input, output):
-    return systemcall('awk \'{ sub("\r$", ""); print }\' ' + input + " > " + output)
 
 
 class Checkheader:
@@ -286,12 +209,14 @@ class VCFpreprocess:
         self.header, self.skiprows = preprocess_vcf(self.vcf)
         self.df = var_to_dataframe(self.vcf, self.skiprows, columns=False)
 
-    def get_values(self):
-        print(self.df)
-        return self.df, self.header
+    def explode_columns(self):
+        df = self.df.copy()
+        # test = pd.DataFrame(df.row.str.split(";")[1].tolist())
+        df.INFO.str.split(";").tolist()
 
-        # def dfTosql(df, con, dico):
-        #    return
+    def get_values(self):
+        # print(self.df)
+        return self.df, self.header
 
 
 def cast_config(config):
@@ -312,9 +237,11 @@ def main():
     # Load vcf file
     vcf = VCFpreprocess(args.vcf)
     variants, header = vcf.get_values()
+    vcf.explode_columns()
     if dico_args:
         headercheck = Checkheader(header, dico_args, args.config)
         headercheck.process()
+    print(parse_info_field(variants))
 
     # worked
     # tablename = "variants"

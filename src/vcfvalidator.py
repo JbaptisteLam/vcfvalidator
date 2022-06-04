@@ -4,6 +4,7 @@ from os import remove
 import pandas as pd
 import subprocess
 import sys
+import json
 import re
 from os.path import join as osj
 from validator.parseargs import Parseoptions
@@ -43,8 +44,9 @@ def preprocess_vcf(file):
     with open(file, "r") as f:
         data["header"] = []
         for i, lines in enumerate(f):
-            data["header"].append(lines.strip())
-            if lines.split("\t")[0] == "#CHROM":
+            if lines.split("\t")[0] != "#CHROM":
+                data["header"].append(lines.strip())
+            else:
                 print(lines)
                 data["fields"] = lines.strip().split("\t")
                 skip.append(i)
@@ -70,31 +72,58 @@ def systemcall(command):
     )
 
 
+def read_json(file):
+    with open(file, "r") as jsonFile:
+        jconf = json.load(jsonFile)
+        return jconf
+
+
 def win_to_unix(input, output):
     return systemcall('awk \'{ sub("\r$", ""); print }\' ' + input + " > " + output)
 
 
 class Checkheader:
-    def __init__(self, header_dict, config, trueconfig):
-        self.header = header_dict["header"]
-        self.fields = header_dict["fields"]
-        self.config = config
+    def __init__(self, header_dict, dico_args, trueconfig):
+        self.header = header_dict
+        self.dico_args = dico_args
         # list of field id to process for each
         # self.rm = self.config["remove"]
-        self.add = self.config["add"]
-        self.trueconfig = trueconfig
+        # self.add = self.config["add"]
+        self.config = read_json(trueconfig)
         # self.edit = self.config["edit"]
         # self.rmwhole = self.config["rmall"]
 
     def check_integrity(self):
-        pass
+        print(self.dico_args)
+        for key, val in self.dico_args.items():
+            if val:
+                if key == "edit":
+                    for j, val in val.items():
+                        self.raise_integrity(j.split(".")[0])
+                else:
+                    for rows in val:
+                        self.raise_integrity(rows[0])
+
+    def raise_integrity(self, elem):
+        if (
+            elem not in self.config["header"]["field"]
+            and elem not in self.config["header"]["extrafield"]
+        ):
+
+            raise ValueError(
+                "'"
+                + elem
+                + "' is not a correct value field \n\t Correct values are "
+                + ",".join(self.config["header"]["field"])
+                + ",".join(self.config["header"]["extrafield"])
+            )
 
     def add_assembly(self):
         # need install of gatk
         return
 
     def add_row(self, field, id, number, type, description, **kwargs):
-        self.header.append(
+        self.header["header"].append(
             "##"
             + field
             + "=<"
@@ -103,10 +132,10 @@ class Checkheader:
                     "ID=" + id,
                     "Number=" + number,
                     "Type=" + type,
-                    "Description=" + description,
+                    'Description="' + description,
                 ]
             )
-            + ">"
+            + '">'
         )
 
     def remove_row(self):
@@ -120,45 +149,95 @@ class Checkheader:
         return index of row in global header
         """
         matching = []
-        for i, rows in enumerate(self.header):
-            x = re.search(field + "=<ID=" + id)
+        for i, rows in enumerate(self.header["header"]):
+            # print("look ", ".*" + field + "=<ID=" + id + ".*")
+            x = re.findall(".*" + field + "=<ID=" + id + ".*", rows)
             if x:
-                matching.append(x)
+                matching.extend(x)
         if not matching:
-            print("WARNING " + field + " ," + id + " does not match any row in header")
-        return matching[0]
+            print(
+                "WARNING '" + field + "." + id + "' does not match any row in header "
+            )
+            return []
+        elif len(matching) > 1:
+            print(
+                "WARNING '"
+                + field
+                + "."
+                + id
+                + "' got more than one match check, verify your header"
+            )
+            return []
 
-    def edit_row(self):
+        return matching
+
+    def edit_row(self, id, fields):
         """
-        edit only one row loop is in class.process func
+        edit only one row loop is in class.process func, id field.ID   fieldskey: fieldsnewvalue,
         """
-        return
+        key = id.split(".")[0]
+        val = id.split(".")[1]
+        # if more than one line matching or no matching return empty list and do not process anything
+        row_match = self.matching_line(key, val)
+        print(row_match)
+        if row_match:
+            print(id, fields)
+            dico_val = {}
+            # explode old header row
+            for f in re.search(r"<(.*?)>", row_match[0]).group(1).split(","):
+                dico_val[f.split("=")[0]] = f.split("=")[1]
+            # replace by new value
+            for k, v in fields.items():
+                dico_val[k] = v
+                if k == "Description":
+                    dico_val[k] = '"' + v + '"'
+            # reconstruct row string from modify dict
+            row_process = (
+                "##"
+                + key
+                + "=<"
+                + ",".join(["=".join([s, r]) for s, r in dico_val.items()])
+                + ">"
+            )
+            print(row_process)
+
+            # print(dico_val)
+            self.header["header"] = list(
+                map(
+                    lambda x: x.replace(row_match[0], row_process),
+                    self.header["header"],
+                )
+            )
 
     def remove_whole(self):
         print("#[INFO] Clear whole header")
         self.header.clear()
 
     def process(self):
-        # if self.rm:
-        #    self.removerow()
-        if self.add:
-            for rows in self.add:
-                print(rows)
-                self.addrow(*rows)
-                print(self.header)
-        # if self.edit:
-        #    for j, r in self.edit:
-        #        self.editrow()
+        ## Act on header vcf
+        # check if value are correct
+        self.check_integrity()
+        for actions, values in self.dico_args.items():
+            ##if user need adding row
+            # if actions == "add" and values:
+            #    for rows in values:
+            #        self.add_row(*rows)
+            #        print(self.header)
+            if actions == "edit" and values:
+                for key, rows in values.items():
+                    self.edit_row(key, rows)
+
+        print(self.header)
         # if self.rmwhole:
         #    self.removewhole()
 
 
 class VCFpreprocess:
-    def __init__(self, vcf, config):
+    def __init__(self, vcf):
         self.vcf = vcf
-        self.config = config
+        # self.config = config
         self.header, self.skiprows = preprocess_vcf(self.vcf)
-        self.df = self.vartodataframe(self.skiprows, columns=False)
+        self.df = self.var_to_dataframe(self.skiprows, columns=False)
 
     def var_to_dataframe(self, skiprows, columns):
         """
@@ -205,14 +284,12 @@ def main():
     # get options parser and process
 
     # Load vcf file
-    vcf = VCFpreprocess(args.vcf, args.config)
+    vcf = VCFpreprocess(args.vcf)
     variants, header = vcf.get_values()
 
-    # Act on header vcf
-    for actions, values in dico_args.items():
-        #    #if user need adding row
-        if actions == "add" and values:
-            pass
+    headercheck = Checkheader(header, dico_args, args.config)
+    headercheck.process()
+
     #    vcf = VCFpreprocess(args.vcf, arg)
     #    df, header = vcf.getvalues()
     #    dico = {"add": [arg]}

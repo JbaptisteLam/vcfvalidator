@@ -10,10 +10,12 @@ class Parseoptions:
         dico = {"add": [], "remove": [], "edit": {}}
         if self.args.add:
             # add new row could be pass more than one row to add format 5fields(field,ID,number,type,description), 5 fields and so on
-            dico["add"].append(self.args.add.split(";"))
+            for values in self.args.add.split(";"):
+                dico["add"].append(values.split(","))
         if self.args.remove:
             # remove row could be pass more than one row to remove format 2fields(field, ID)
-            dico["remove"].append(self.args.add.split(";"))
+            for values in self.args.add.split(";"):
+                dico["remove"].append(values.split(","))
         if self.args.edit:
             # remove row could be pass more than one row to edit format 2fields(field.ID) to find which row to edit
             # then add field needed to be replace and the new entry like so INFO.gene|Type:Integer;   (change old type to integer)

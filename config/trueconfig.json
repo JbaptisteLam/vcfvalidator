@@ -1,4 +1,6 @@
-"header": {
-    "field": ["ID", "ALT", "INFO", "FORMAT", "FILTER", "QUAL"],
-    "extrafield": ["fileformat", "fileDate", "source", "reference", "phasing", "assembly", "contig"]
+{
+    "header":{
+        "field":["ID", "ALT", "INFO", "FORMAT", "FILTER", "QUAL"],
+        "extrafield":["fileformat", "fileDate", "source", "reference", "phasing", "assembly", "contig"]
+    }
 }

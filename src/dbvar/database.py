@@ -41,9 +41,9 @@ class Databasevar:
             ("chr%",),
         )
         res = self.c.fetchall()
-        print(len(res))
-        print(type(self.c.fetchall()))
-        print(len(self.df_variants.index))
+        # print(len(res))
+        # print(type(self.c.fetchall()))
+        # print(len(self.df_variants.index))
         if len(res) != len(self.df_variants.index):
             self.c.execute(
                 "SELECT [#CHROM], POS from "

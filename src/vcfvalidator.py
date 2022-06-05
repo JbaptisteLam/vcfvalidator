@@ -241,11 +241,23 @@ def main():
     if dico_args:
         headercheck = Checkheader(header, dico_args, args.config)
         headercheck.process()
-    print(parse_info_field(variants))
+    variants_explode, badannno, list_sample = parse_sample_field(
+        parse_info_field(variants)
+    )
 
     # worked
-    # tablename = "variants"
-    # dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
+    tablename = "variants"
+    dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
+    db = dbv(
+        variants_explode,
+        dbname,
+        os.path.basename(args.vcf),
+        tablename,
+        read_json(args.config),
+    )
+    db.create_table()
+    db.chromosome_check()
+    print(pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns))
     # dbv(variants, dbname, os.path.basename(args.vcf)).request(
     #    "CREATE TABLE IF NOT EXISTS "
     #    + tablename

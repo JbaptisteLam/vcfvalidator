@@ -89,13 +89,10 @@ def parse_info_field(dfVar):
 
     df_final = pd.DataFrame(dicoInfo, columns=np.unique(np.array(headers)))
 
-    dfInfo = dfVar.iloc[:, 0:6].join(df_final, how="inner")
-    print(dfVar.iloc[:, 0:6].columns)
-    print(dfInfo.columns)
+    dfInfo = dfVar.iloc[:, :6].join(df_final, how="inner")
     # Drop old columns info
     # dfInfo.drop(columns="INFO", inplace=True)
-    df = pd.concat([dfInfo, dfVar.iloc[8:]])
-    print(df.columns)
+    df = dfInfo.join(dfVar.iloc[:, 8:], how="inner")
     return df
 
 

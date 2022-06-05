@@ -2,6 +2,8 @@ import pandas as pd
 import json
 import subprocess
 import numpy as np
+import sys
+from itertools import zip_longest
 
 
 def parse_sample_field(dfVar):
@@ -89,7 +91,7 @@ def parse_info_field(dfVar):
 
     df_final = pd.DataFrame(dicoInfo, columns=np.unique(np.array(headers)))
 
-    dfInfo = dfVar.iloc[:, :6].join(df_final, how="inner")
+    dfInfo = dfVar.iloc[:, :7].join(df_final, how="inner")
     # Drop old columns info
     # dfInfo.drop(columns="INFO", inplace=True)
     df = dfInfo.join(dfVar.iloc[:, 8:], how="inner")
@@ -176,3 +178,26 @@ def read_json(file):
 
 def win_to_unix(input, output):
     return systemcall('awk \'{ sub("\r$", ""); print }\' ' + input + " > " + output)
+
+
+def df_to_vcf(df, samplename):
+    filter_col_pos = df.columns.get_loc("FILTER")
+    format_col_pos = df.columns.get_loc("FORMAT")
+    dfdone = df.iloc[:, 0 : filter_col_pos + 1]
+    # Recreate INFO field from dataframe resulting from db query
+    final = []
+    l = []
+    df_tmp = df.iloc[:, filter_col_pos + 1 : format_col_pos]
+    for col in df_tmp.columns:
+        tmp = []
+        for row in df[col]:
+            tmp.append(str(col) + "=" + str(row))
+        l.append(tmp)
+    for t in zip_longest(*l):
+        final.append(";".join(t))
+    dfdone["INFO"] = final
+    dfdone["FORMAT"] = df["FORMAT"]
+    dfdone[samplename] = df.iloc[:, format_col_pos + 1 :].apply(
+        lambda x: ":".join(x.astype(str)), axis=1
+    )
+    return dfdone

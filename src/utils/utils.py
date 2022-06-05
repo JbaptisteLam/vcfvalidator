@@ -1,7 +1,9 @@
+from posixpath import sep
 import pandas as pd
 import json
 import subprocess
 import numpy as np
+import os
 import sys
 from itertools import zip_longest
 
@@ -146,7 +148,8 @@ def preprocess_vcf(file):
                 data["header"].append(lines.strip())
             else:
                 print(lines)
-                data["fields"] = lines.strip().split("\t")
+                # data["fields"] = lines.strip().split("\t")
+                data["fields"] = lines.strip()
                 skip.append(i)
                 break
     return data, skip[0]
@@ -180,7 +183,7 @@ def win_to_unix(input, output):
     return systemcall('awk \'{ sub("\r$", ""); print }\' ' + input + " > " + output)
 
 
-def df_to_vcf(df, samplename):
+def df_to_vcflike(df, samplename):
     filter_col_pos = df.columns.get_loc("FILTER")
     format_col_pos = df.columns.get_loc("FORMAT")
     dfdone = df.iloc[:, 0 : filter_col_pos + 1]
@@ -191,6 +194,9 @@ def df_to_vcf(df, samplename):
     for col in df_tmp.columns:
         tmp = []
         for row in df[col]:
+            # if variant does not carry the annotation stack it at '.'
+            if row == None:
+                row = "."
             tmp.append(str(col) + "=" + str(row))
         l.append(tmp)
     for t in zip_longest(*l):
@@ -201,3 +207,13 @@ def df_to_vcf(df, samplename):
         lambda x: ":".join(x.astype(str)), axis=1
     )
     return dfdone
+
+
+def create_vcf(df, header_dict, output):
+    print("#[INFO] Generate " + output)
+    with open(output, "w+") as f:
+        for row in header_dict["header"]:
+            f.write(row + "\n")
+        f.write(header_dict["fields"] + "\n")
+    df.to_csv(output, mode="a", index=False, header=False, sep="\t")
+    return output

@@ -38,7 +38,7 @@ class Parseoptions:
 
     def parseargs(self):
         parser = argparse.ArgumentParser(
-            description="Filter tsv in DPNI and POOL context, basically tsv have to come from varank analysis ",
+            description="VCFvalidator, manipulate variant call format file, basic: fix vcf both header and variant regaridng samtools spcifications version 4.2",
         )
         parser.add_argument(
             "-i",
@@ -53,6 +53,13 @@ class Parseoptions:
             type=str,
             default="/home1/BAS/lamouchj/scripts/vcfvalidator/config/trueconfig.json",
             help="Absolute path of config file containing value allowed in vcfvalidator for each field both header and variant part",
+        )
+        parser.add_argument(
+            "-o",
+            "--output",
+            type=str,
+            default="basic",
+            help="Output vcf with absolute path",
         )
         subparsers = parser.add_subparsers(dest="command")
 

@@ -13,6 +13,7 @@ from utils.utils import (
     parse_sample_field,
     parse_info_field,
     systemcall,
+    df_to_vcf,
 )
 import pandas as pd
 from dbvar.database import Databasevar as dbv
@@ -257,7 +258,9 @@ def main():
     )
     db.create_table()
     db.chromosome_check()
-    print(pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns))
+    output = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
+
+    print(df_to_vcf(output, "Likely_benin"))
     # dbv(variants, dbname, os.path.basename(args.vcf)).request(
     #    "CREATE TABLE IF NOT EXISTS "
     #    + tablename

@@ -13,7 +13,8 @@ from utils.utils import (
     parse_sample_field,
     parse_info_field,
     systemcall,
-    df_to_vcf,
+    df_to_vcflike,
+    create_vcf,
 )
 import pandas as pd
 from dbvar.database import Databasevar as dbv
@@ -198,7 +199,7 @@ class Checkheader:
                 for rows in values:
                     self.remove_row(*rows)
 
-        print(self.header)
+        return self.header
         # if self.rmwhole:
         #    self.removewhole()
 
@@ -232,8 +233,16 @@ def main():
     opt = Parseoptions()
     # return options parsed in dico format and argparse.Namespace respectively
     dico_args, args = opt.get_args()
-    # print(args)
-    # get options parser and process
+
+    # if no output specified generate vcf as input file name with correct
+    if args.output == "basic":
+        output = osj(
+            os.path.dirname(args.vcf),
+            os.path.basename(args.vcf).split(".")[0] + "_correct.vcf",
+        )
+    if os.path.exists(output):
+        print("ERROR " + output + " exist remove or choose an other output filename")
+        exit()
 
     # Load vcf file
     vcf = VCFpreprocess(args.vcf)
@@ -241,11 +250,14 @@ def main():
     vcf.explode_columns()
     if dico_args:
         headercheck = Checkheader(header, dico_args, args.config)
-        headercheck.process()
+        hprocess = headercheck.process()
+
+    else:
+        hprocess = header
+
     variants_explode, badannno, list_sample = parse_sample_field(
         parse_info_field(variants)
     )
-
     # worked
     tablename = "variants"
     dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
@@ -258,9 +270,11 @@ def main():
     )
     db.create_table()
     db.chromosome_check()
-    output = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
+    dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
 
-    print(df_to_vcf(output, "Likely_benin"))
+    dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin")
+    create_vcf(dfwrite, hprocess, output)
+
     # dbv(variants, dbname, os.path.basename(args.vcf)).request(
     #    "CREATE TABLE IF NOT EXISTS "
     #    + tablename

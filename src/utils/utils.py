@@ -179,6 +179,14 @@ def read_json(file):
         return jconf
 
 
+def cast_config(config):
+    conf = read_json(config)
+    result = []
+    for key, values in conf["variants"]["cast"].items():
+        result.append(key + " " + values)
+    return ", ".join(result)
+
+
 def win_to_unix(input, output):
     return systemcall('awk \'{ sub("\r$", ""); print }\' ' + input + " > " + output)
 
@@ -214,6 +222,7 @@ def create_vcf(df, header_dict, output):
     with open(output, "w+") as f:
         for row in header_dict["header"]:
             f.write(row + "\n")
-        f.write(header_dict["fields"] + "\n")
-    df.to_csv(output, mode="a", index=False, header=False, sep="\t")
+        #f.write(header_dict["fields"] + "\n")
+    print(df)
+    df.to_csv(output, mode="a", index=False, header=True, sep="\t")
     return output

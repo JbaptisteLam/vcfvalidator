@@ -221,12 +221,41 @@ class VCFpreprocess:
         return self.df, self.header
 
 
-def cast_config(config):
-    conf = read_json(config)
-    result = []
-    for key, values in conf["variants"]["cast"].items():
-        result.append(key + " " + values)
-    return ", ".join(result)
+class Checkvariants:
+    def __init__(self, df, samplename):
+        self.df = df
+        self.samplename = samplename
+
+    def check_col(self):
+        miss = []
+        colus = [
+            "#CHROM",
+            "POS",
+            "ID",
+            "REF",
+            "ALT",
+            "QUAL",
+            "FILTER",
+            "INFO",
+            "FORMAT",
+        ]
+        for col in colus:
+            if col not in self.df.columns:
+                miss.append(col)
+        if self.df.columns[-1] in colus and miss:
+            print("WARNING missing SAMPLE " + " ".join(miss) + " columns")
+            return True
+
+    def add_basic(self):
+        self.df["FORMAT"] = "GT:AD:DP"
+        self.df[self.samplename] = "0/1:50,50:100"
+
+    def process(self):
+        if self.check_col():
+            self.add_basic()
+            return self.df
+        else:
+            return pd.DataFrame({"emp1": [], "empt2": []})
 
 
 def main():
@@ -247,7 +276,19 @@ def main():
     # Load vcf file
     vcf = VCFpreprocess(args.vcf)
     variants, header = vcf.get_values()
-    vcf.explode_columns()
+    print(header)
+
+    cvar = Checkvariants(variants, "sample")
+    variants_new = cvar.process()
+
+    # add correct columln
+    # header["fields"] = variants_new.columns
+    if not variants_new.empty:
+        headercheck = Checkheader(
+            header, read_json(args.config)["variants"]["basic"], args.config
+        )
+        hprocess = headercheck.process()
+
     if dico_args:
         headercheck = Checkheader(header, dico_args, args.config)
         hprocess = headercheck.process()
@@ -255,39 +296,25 @@ def main():
     else:
         hprocess = header
 
-    variants_explode, badannno, list_sample = parse_sample_field(
-        parse_info_field(variants)
-    )
-    # worked
-    tablename = "variants"
-    dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
-    db = dbv(
-        variants_explode,
-        dbname,
-        os.path.basename(args.vcf),
-        tablename,
-        read_json(args.config),
-    )
-    db.create_table()
-    db.chromosome_check()
-    dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
-
-    dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin")
-    create_vcf(dfwrite, hprocess, output)
-
-    # dbv(variants, dbname, os.path.basename(args.vcf)).request(
-    #    "CREATE TABLE IF NOT EXISTS "
-    #    + tablename
-    #    + " ("
-    #    + cast_config(args.config)
-    #    + ")"
+    # variants_explode, badannno, list_sample = parse_sample_field(
+    #    parse_info_field(variants)
     # )
-
-    #    vcf = VCFpreprocess(args.vcf, arg)
-    #    df, header = vcf.getvalues()
-    #    dico = {"add": [arg]}
-    #    pheader = Checkheader(header, dico)
-    #    print(pheader.process())
+    # worked
+    # tablename = "variants"
+    # dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
+    # db = dbv(
+    #    variants_explode,
+    #    dbname,
+    #    os.path.basename(args.vcf),
+    #    tablename,
+    #    read_json(args.config),
+    # )
+    # db.create_table()
+    # db.chromosome_check()
+    # dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
+    #
+    # dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin")
+    create_vcf(variants_new, hprocess, output)
 
 
 if __name__ == "__main__":

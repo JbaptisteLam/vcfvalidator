@@ -222,7 +222,15 @@ def create_vcf(df, header_dict, output):
     with open(output, "w+") as f:
         for row in header_dict["header"]:
             f.write(row + "\n")
-        #f.write(header_dict["fields"] + "\n")
+        # f.write(header_dict["fields"] + "\n")
     print(df)
-    df.to_csv(output, mode="a", index=False, header=True, sep="\t")
+    df.to_csv(
+        output,
+        mode="a",
+        doublequote=False,
+        escapechar="\\",
+        index=False,
+        header=True,
+        sep="\t",
+    )
     return output

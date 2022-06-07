@@ -5,8 +5,21 @@ import subprocess
 import numpy as np
 import os
 import sys
+import re
 from itertools import zip_longest
 
+def get_header_id(header, config):
+    header_infos = {}
+    for rows in header['header']:
+        field = re.findall(r'(?<=##)[^=]+', rows)[0]
+        if field and field in config['header']['field'] and field != 'ID':
+            if not field in header_infos:
+                header_infos[field] = []
+            id = re.findall(r'(?<=ID=)[^,]+', rows)[0]
+            print(id)
+            header_infos[field].append(id)
+    #print(header_infos)
+    return header_infos
 
 def parse_sample_field(dfVar):
     #############

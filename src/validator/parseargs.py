@@ -97,6 +97,13 @@ class Parseoptions:
             help="Name of variant database, if not provided it will be set at input vcf name",
         )
 
+        # VCF Scan ----------------
+        parser_annotate = subparsers.add_parser(
+            "Scan",
+            help="Identify anomalies in vcf both header and variants"
+            # formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        )
+
         # VCF Correct ----------------
         parser_correct = subparsers.add_parser(
             "Correct",

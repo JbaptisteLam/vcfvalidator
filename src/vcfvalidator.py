@@ -276,8 +276,17 @@ def main():
     # Load vcf file
     vcf = VCFpreprocess(args.vcf)
     variants, header = vcf.get_values()
-    print(header)
 
+    # choice main func
+    if args.command == "validate":
+        main_validate(variants, header, args, dico_args, output)
+    elif args.command == "annotate":
+        main_annotate(variants, header, args, output)
+    else:
+        main_test()
+
+
+def main_validate(variants, header, args, dico_args, output):
     cvar = Checkvariants(variants, "sample")
     variants_new = cvar.process()
 
@@ -296,25 +305,36 @@ def main():
     else:
         hprocess = header
 
-    # variants_explode, badannno, list_sample = parse_sample_field(
-    #    parse_info_field(variants)
-    # )
+    create_vcf(variants_new, hprocess, output)
+
+
+def main_annotate(variants, header, args, output):
+    variants_explode, badannno, list_sample = parse_sample_field(
+        parse_info_field(variants)
+    )
     # worked
     # tablename = "variants"
-    # dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
-    # db = dbv(
-    #    variants_explode,
-    #    dbname,
-    #    os.path.basename(args.vcf),
-    #    tablename,
-    #    read_json(args.config),
-    # )
-    # db.create_table()
-    # db.chromosome_check()
-    # dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
-    #
-    # dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin")
-    create_vcf(variants_new, hprocess, output)
+    if args.dbname:
+        dbname = args.dbname
+    else:
+        dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
+    db = dbv(
+        variants_explode,
+        dbname,
+        os.path.basename(args.vcf),
+        args.tablename,
+        read_json(args.config),
+    )
+    db.create_table()
+    db.chromosome_check()
+    dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
+    dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin")
+
+    create_vcf(dfwrite, header, output)
+
+
+def main_test():
+    pass
 
 
 if __name__ == "__main__":

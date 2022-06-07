@@ -66,7 +66,7 @@ class Parseoptions:
         # VCF Annotate -------------------
         parser_annotate = subparsers.add_parser(
             "Annotate",
-            help="Add, edit or remove row in VCF header",
+            help="Add, edit or remove row in VCF header"
             # formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
         parser_annotate.add_argument(
@@ -89,6 +89,12 @@ class Parseoptions:
             default="",
             type=str,
             help="remove row in header by field, ID pair",
+        )
+        parser_annotate.add_argument(
+            "-db",
+            "--dbname",
+            type=str,
+            help="Name of variant database, if not provided it will be set at input vcf name",
         )
 
         # VCF Correct ----------------

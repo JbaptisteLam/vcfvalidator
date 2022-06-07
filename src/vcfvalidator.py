@@ -15,6 +15,7 @@ from utils.utils import (
     systemcall,
     df_to_vcflike,
     create_vcf,
+    get_header_id
 )
 import pandas as pd
 from dbvar.database import Databasevar as dbv
@@ -222,9 +223,10 @@ class VCFpreprocess:
 
 
 class Checkvariants:
-    def __init__(self, df, samplename):
+    def __init__(self, df, samplename, mode):
         self.df = df
         self.samplename = samplename
+        self.mode = mode
 
     def check_col(self):
         miss = []
@@ -263,6 +265,9 @@ def main():
     # return options parsed in dico format and argparse.Namespace respectively
     dico_args, args = opt.get_args()
 
+    #read config
+    config = read_json(args.config)
+
     # if no output specified generate vcf as input file name with correct
     if args.output == "basic":
         output = osj(
@@ -278,26 +283,17 @@ def main():
     variants, header = vcf.get_values()
 
     # choice main func
-    if args.command == "validate":
-        main_validate(variants, header, args, dico_args, output)
-    elif args.command == "annotate":
+    if args.command == "Correct":
+        main_correct(variants, header, args, dico_args, output, True)
+    elif args.command == "Scan":
+        main_correct(variants, header, args, dico_args, output, False)
+    elif args.command == "Annotate":
         main_annotate(variants, header, args, output)
     else:
-        main_test()
+        main_test(header, config)
 
 
-def main_validate(variants, header, args, dico_args, output):
-    cvar = Checkvariants(variants, "sample")
-    variants_new = cvar.process()
-
-    # add correct columln
-    # header["fields"] = variants_new.columns
-    if not variants_new.empty:
-        headercheck = Checkheader(
-            header, read_json(args.config)["variants"]["basic"], args.config
-        )
-        hprocess = headercheck.process()
-
+def main_annotate(variants, header, args, dico_args, output):
     if dico_args:
         headercheck = Checkheader(header, dico_args, args.config)
         hprocess = headercheck.process()
@@ -305,10 +301,23 @@ def main_validate(variants, header, args, dico_args, output):
     else:
         hprocess = header
 
-    create_vcf(variants_new, hprocess, output)
+    create_vcf(variants, hprocess, output)
 
 
-def main_annotate(variants, header, args, output):
+def main_correct(variants, header, args, output, mode):
+    #only if correct mode activate #TODO
+    print("Check integrity of "+args.vcf+" ...")
+    cvar = Checkvariants(variants, "sample", mode)
+    if mode:
+        variants_new = cvar.process()
+        # add correct columln
+        # header with basic GT AD and DP add
+        if not variants_new.empty:
+            headercheck = Checkheader(
+                header, read_json(args.config)["variants"]["basic"], args.config
+            ).process()
+
+    #explode INFO and SAMPLE field
     variants_explode, badannno, list_sample = parse_sample_field(
         parse_info_field(variants)
     )
@@ -326,14 +335,21 @@ def main_annotate(variants, header, args, output):
         read_json(args.config),
     )
     db.create_table()
-    db.chromosome_check()
+    #chromosome check only if correct mode activate
+    #db.chromosome_check()
     dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
     dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin")
 
     create_vcf(dfwrite, header, output)
 
+def main_analyze(variants, header, args, output):
+    '''
+    check many possible malformation in vcf
+    '''
+    pass
 
-def main_test():
+def main_test(header, config):
+    print(get_header_id(header, config))
     pass
 
 

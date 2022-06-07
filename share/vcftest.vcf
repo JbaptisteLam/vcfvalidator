@@ -1,0 +1,65 @@
+##fileformat=VCFv4.1
+##fileDate=2021-11-20
+##source=ClinVar
+##reference=GRCh37
+##ID=<Description="ClinVar Variation ID">
+##contig=<ID=chr21,assembly=hg19,length=48129895>
+##contig=<ID=chr2,assembly=hg19,length=243199373>
+##contig=<ID=chrX,assembly=hg19,length=155270560>
+##contig=<ID=chr20,assembly=hg19,length=63025520>
+##contig=<ID=chrY,assembly=hg19,length=59373566>
+##contig=<ID=chr1,assembly=hg19,length=249250621>
+##contig=<ID=chr19,assembly=hg19,length=59128983>n
+##contig=<ID=chr15,assembly=hg19,length=102531392>
+##contig=<ID=chr3,assembly=hg19,length=198022430>
+##contig=<ID=chr6,assembly=hg19,length=171115067>
+##contig=<ID=chr4,assembly=hg19,length=191154276>
+##contig=<ID=chrM,assembly=hg19,length=16571>
+##contig=<ID=chr5,assembly=hg19,length=180915260>
+##contig=<ID=chr11,assembly=hg19,length=135006516>
+##contig=<ID=chr7,assembly=hg19,length=159138663>
+##contig=<ID=chr18,assembly=hg19,length=78077248>
+##contig=<ID=chr8,assembly=hg19,length=146364022>
+##contig=<ID=chr9,assembly=hg19,length=141213431>
+##contig=<ID=chr10,assembly=hg19,length=135534747>
+##contig=<ID=chr14,assembly=hg19,length=107349540>
+##contig=<ID=chr16,assembly=hg19,length=90354753>
+##contig=<ID=chr17,assembly=hg19,length=81195210>
+##contig=<ID=chr12,assembly=hg19,length=133851895>
+##contig=<ID=chr13,assembly=hg19,length=115169878>
+##contig=<ID=chr22,assembly=hg19,length=51304566>
+##INFO=<ID=AF_ESP,Number=1,Type=Float,Description="allele frequencies from GO-ESP">
+##INFO=<ID=AF_EXAC,Number=1,Type=Float,Description="allele frequencies from ExAC">
+##INFO=<ID=AF_TGP,Number=1,Type=Float,Description="allele frequencies from TGP">
+##INFO=<ID=ALLELEID,Number=1,Type=Integer,Description="the ClinVar Allele ID">
+##INFO=<ID=CLNDN,Number=.,Type=String,Description="ClinVar's preferred disease name for the concept specified by disease identifiers in CLNDISDB">
+##INFO=<ID=CLNDNINCL,Number=.,Type=String,Description="For included Variant : ClinVar's preferred disease name for the concept specified by disease identifiers in CLNDISDB">
+##INFO=<ID=CLNDISDB,Number=.,Type=String,Description="Tag-value pairs of disease database name and identifier, e.g. OMIM:NNNNNN">
+##INFO=<ID=CLNDISDBINCL,Number=.,Type=String,Description="For included Variant: Tag-value pairs of disease database name and identifier, e.g. OMIM:NNNNNN">
+##INFO=<ID=CLNHGVS,Number=.,Type=String,Description="Top-level (primary assembly, alt, or patch) HGVS expression.">
+##INFO=<ID=CLNREVSTAT,Number=.,Type=String,Description="ClinVar review status for the Variation ID">
+##INFO=<ID=CLNSIG,Number=.,Type=String,Description="Clinical significance for this single variant">
+##INFO=<ID=CLNSIGCONF,Number=.,Type=String,Description="Conflicting clinical significance for this single variant">
+##INFO=<ID=CLNSIGINCL,Number=.,Type=String,Description="Clinical significance for a haplotype or genotype that includes this variant. Reported as pairs of VariationID:clinical significance.">
+##INFO=<ID=CLNVC,Number=1,Type=String,Description="Variant type">
+##INFO=<ID=CLNVCSO,Number=1,Type=String,Description="Sequence Ontology id for variant type">
+##INFO=<ID=CLNVI,Number=.,Type=String,Description="the variant's clinical sources reported as tag-value pairs of database and variant identifier">
+##INFO=<ID=DBVARID,Number=.,Type=String,Description="nsv accessions from dbVar for the variant">
+##INFO=<ID=GENEINFO,Number=1,Type=String,Description="Gene(s) for the variant reported as gene symbol:gene id. The gene symbol and id are delimited by a colon (:) and each pair is delimited by a vertical bar (|)">
+##INFO=<ID=MC,Number=.,Type=String,Description="comma separated list of molecular consequence in the form of Sequence Ontology ID|molecular_consequence">
+##INFO=<ID=ORIGIN,Number=.,Type=String,Description="Allele origin. One or more of the following values may be added: 0 - unknown; 1 - germline; 2 - somatic; 4 - inherited; 8 - paternal; 16 - maternal; 32 - de-novo; 64 - biparental; 128 - uniparental; 256 - not-tested; 512 - tested-inconclusive; 1073741824 - other">
+##INFO=<ID=RS,Number=.,Type=String,Description="dbSNP ID (i.e. rs number)">
+##INFO=<ID=SSR,Number=1,Type=Integer,Description="Variant Suspect Reason Codes. One or more of the following values may be added: 0 - unspecified, 1 - Paralog, 2 - byEST, 4 - oldAlign, 8 - Para_EST, 16 - 1kg_failed, 1024 - other">
+##FORMAT=<ID=DP,Number=1,Type=String,Description="Depth of coverage">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=1,Type=String,Description="AlleleDepth">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Likelybenin_Clinvar
+chr1	865519	1125147	C	T	.	.	ALLELEID=1110865;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000001.10:g.865519C>T;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=SAMD11:148398;MC=SO:0001627|intron_variant;ORIGIN=1	GT:AD:DP	0/1:50,50:100
+chr2	271918	756151	C	T	.	.	AF_ESP=0.00015;AF_EXAC=0.00005;ALLELEID=763153;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000002.11:g.271918C>T;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=ACP1:52;MC=SO:0001619|non-coding_transcript_variant,SO:0001819|synonymous_variant;ORIGIN=1;RS=142497773	GT:AD:DP	0/1:50,50:100
+chr7	193205	709117	G	A	.	.	AF_EXAC=0.00030;ALLELEID=722443;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000007.13:g.193205G>A;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=FAM20C:56975;MC=SO:0001819|synonymous_variant;ORIGIN=1;RS=749965678	GT:AD:DP	0/1:50,50:100
+7	193222	724470	G	A	.	.	AF_ESP=0.00175;AF_EXAC=0.00072;AF_TGP=0.00120;ALLELEID=736075;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000007.13:g.193222G>A;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=FAM20C:56975;MC=SO:0001583|missense_variant;ORIGIN=1;RS=73251052	GT:AD:DP	0/1:50,50:100
+chr7	193399	290748	C	A	.	.	AF_EXAC=0.00426;AF_TGP=0.00120;ALLELEID=274985;CLNDISDB=MedGen:CN169374;CLNDN=not_specified;CLNHGVS=NC_000007.13:g.193399C>A;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=FAM20C:56975;MC=SO:0001583|missense_variant;ORIGIN=1;RS=538469200	GT:AD:DP	0/1:50,50:100
+chr15	22074676	777876	G	A	.	.	AF_EXAC=0.01455;ALLELEID=703075;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000015.9:g.22074676G>A;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=POTEB:100996331;MC=SO:0001619|non-coding_transcript_variant,SO:0001819|synonymous_variant;ORIGIN=1;RS=1394906985	GT:AD:DP	0/1:50,50:100
+chrX	585121	265992	C	G	.	.	ALLELEID=260809;CLNDISDB=MONDO:MONDO:0010367,MedGen:C1845118,OMIM:300582,Orphanet:ORPHA314795;CLNDN=Short_stature,_idiopathic,_X-linked;CLNHGVS=NC_000023.10:g.585121C>G;CLNREVSTAT=no_assertion_criteria_provided;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=SHOX:6473;MC=SO:0001623|5_prime_UTR_variant;ORIGIN=1;RS=886039879	GT:AD:DP	0/1:50,50:100
+chrX	591622	586583	CG	C	.	.	ALLELEID=577995;CLNDISDB=MedGen:CN169374;CLNDN=not_specified;CLNHGVS=NC_000023.10:g.591624del;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=Deletion;CLNVCSO=SO:0000159;GENEINFO=SHOX:6473;MC=SO:0001623|5_prime_UTR_variant;ORIGIN=0;RS=778186580	GT:AD:DP	0/1:50,50:100
+chrX	591752	256192	G	A	.	.	AF_ESP=0.00092;AF_EXAC=0.00026;AF_TGP=0.00053;ALLELEID=257893;CLNDISDB=MedGen:CN169374;CLNDN=not_specified;CLNHGVS=NC_000023.10:g.591752G>A;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=SHOX:6473;MC=SO:0001819|synonymous_variant;ORIGIN=1;RS=139059497	GT:AD:DP	0/1:50,50:100

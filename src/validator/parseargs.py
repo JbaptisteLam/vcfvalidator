@@ -98,10 +98,22 @@ class Parseoptions:
         )
 
         # VCF Scan ----------------
-        parser_annotate = subparsers.add_parser(
+        parser_scan = subparsers.add_parser(
             "Scan",
             help="Identify anomalies in vcf both header and variants"
             # formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        )
+        parser_scan.add_argument(
+            "-db",
+            "--dbname",
+            type=str,
+            help="Name of variant database, if not provided it will be set at input vcf name",
+        )
+        parser_scan.add_argument(
+            "-t",
+            "--tablename",
+            type=str,
+            help="name of table database",
         )
 
         # VCF Correct ----------------

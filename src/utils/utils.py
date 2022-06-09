@@ -8,6 +8,8 @@ import sys
 import re
 from itertools import zip_longest
 
+
+#DEPRECIATED TODO
 def get_header_id(header, config):
     header_infos = {}
     for rows in header['header']:
@@ -20,6 +22,40 @@ def get_header_id(header, config):
             header_infos[field].append(id)
     #print(header_infos)
     return header_infos
+
+def explode_header(header):
+    '''
+    from header of vcf file return huge dico separate first field second fiel list of values
+    '''
+    dico = {}
+    #for each row in header
+    for lines in header['header']:
+        effective = lines.split('##')[1]
+        #if row is fill and need to be translate in dict
+        if effective.endswith('>') and not effective.startswith("contig"):
+            #print(effective)
+            desc = effective.split("=", 1)
+            #if key id is not already in dict create key
+            if not desc[0] in dico.keys():
+                dico[desc[0]] = {}
+            #for each value in field ID, maximum split 3 to avoid split in description field
+            tmp = {}
+            for it in re.search('<(.*)>', desc[1]).group(1).split(',', 3):
+                field = it.split('=')
+                key = field[0]
+                value = field[1]
+                tmp[key] = value
+            if 'ID' in tmp.keys():
+                value = tmp['ID']
+                tmp.pop('ID')
+                dico[desc[0]][value] = tmp
+            else:
+                dico[desc[0]] = tmp
+        elif not effective.startswith("contig"):
+            val = effective.split('=')
+            dico[val[0]] = val[1]
+    #print(json.dumps(dico, indent=4))
+    return dico
 
 def parse_sample_field(dfVar):
     #############

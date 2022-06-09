@@ -57,11 +57,11 @@ class Databasevar:
             if not res_chr:
                 # print(res_chr)
                 print("#[INFO] Chromosomes check OK")
+                return False
             else:
                 print("WARNING some variants are not conform ", res_chr)
-                print("#[INFO] correct CHR field")
-                for values in res_chr:
-                    self.update_value(values)
+                return self.c.fetchall()
+
 
     def update_value(self, old):
         self.c.execute(

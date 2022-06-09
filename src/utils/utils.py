@@ -7,6 +7,20 @@ import os
 import sys
 import re
 from itertools import zip_longest
+import codecs
+
+def is_utf8(vcf):
+    error = []
+    with open(vcf, 'r') as f:
+        for i, line in enumerate(f):
+            line = line.encode()
+            try:
+                line.decode('ascii')
+                #print("#[INFO] Valid utf-8")
+                #print(line.decode('utf-8'))
+            except UnicodeDecodeError:
+                error.append('WARNING row '+str(i+1)+' invalid utf-8')
+    return error
 
 
 #DEPRECIATED TODO
@@ -28,6 +42,7 @@ def explode_header(header):
     from header of vcf file return huge dico separate first field second fiel list of values
     '''
     dico = {}
+    error = []
     #for each row in header
     for lines in header['header']:
         effective = lines.split('##')[1]
@@ -38,24 +53,30 @@ def explode_header(header):
             #if key id is not already in dict create key
             if not desc[0] in dico.keys():
                 dico[desc[0]] = {}
-            #for each value in field ID, maximum split 3 to avoid split in description field
+            #for each value in field ID, maximum split 3 to avoid split in description field (description should be the last) TODO
             tmp = {}
             for it in re.search('<(.*)>', desc[1]).group(1).split(',', 3):
                 field = it.split('=')
                 key = field[0]
                 value = field[1]
                 tmp[key] = value
+                #Check if Description field is correct
+                if key == 'Description':
+                    if not value.startswith('"') or not value.endswith('"'):
+                        error.append(lines)
+            #STACK ID value as dict name and other values key pair in level -1
             if 'ID' in tmp.keys():
                 value = tmp['ID']
                 tmp.pop('ID')
                 dico[desc[0]][value] = tmp
             else:
                 dico[desc[0]] = tmp
+        #extra field values 
         elif not effective.startswith("contig"):
             val = effective.split('=')
             dico[val[0]] = val[1]
     #print(json.dumps(dico, indent=4))
-    return dico
+    return dico, error
 
 def parse_sample_field(dfVar):
     #############

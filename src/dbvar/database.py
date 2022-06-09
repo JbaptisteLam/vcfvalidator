@@ -1,9 +1,12 @@
 # Sqlite exchange
 import sqlite3
+import ssl
+from textwrap import indent
+import json
 
 
 class Databasevar:
-    def __init__(self, df_variants, db, vcfname, tablename, config):
+    def __init__(self, df_variants, db, vcfname, tablename, config, header_explode):
         self.conn = sqlite3.connect(db)
         self.c = self.conn.cursor()
         self.vcfname = vcfname
@@ -11,6 +14,7 @@ class Databasevar:
         self.df_variants = df_variants
         self.tablename = tablename
         self.config = config
+        self.header = header_explode[0]
         print("#[INFO] SQLite " + db + " connected ")
 
     def request(self, request):
@@ -33,7 +37,7 @@ class Databasevar:
             self.tablename, self.conn, if_exists="replace", index=False
         )
 
-    def chromosome_check(self, mode):
+    def chromosome_check(self):
         # request = "SELECT * FROM " + self.tablename + " WHERE #CHROM LIKE ", (chr,)
         # self.request(request)
         self.c.execute(
@@ -77,6 +81,16 @@ class Databasevar:
         )
         self.conn.commit()
         self.c.execute("SELECT * FROM " + self.tablename)
+
+    def check_annotations(self):
+        miss = []
+        curs = self.c.execute('SELECT * from '+self.tablename)
+        names = [desc[0] for desc in curs.description]
+        for col in names:
+            if not col in self.header.keys() and not col in self.header['FORMAT'] and not col in self.header['INFO'] \
+                and not col in self.config['header']['all']:
+                miss.append(col)   
+        return miss
 
     def db_to_dataframe(self):
         return self.c.fetchall()

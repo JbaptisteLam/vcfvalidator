@@ -336,7 +336,7 @@ def main_annotate(variants, header, args, dico_args, output, config):
     create_vcf(variants, hprocess, output)
 
 def main_scan(variants, header, args, config):
-    print("Check integrity of "+args.vcf+" ...")
+    print("Check integrity of "+os.path.abspath(args.vcf)+" ...")
     cvar = Checkvariants(variants, "sample")
     variants_new = cvar.check_col()
 

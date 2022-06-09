@@ -15,7 +15,7 @@ from utils.utils import (
     systemcall,
     df_to_vcflike,
     create_vcf,
-    get_header_id
+    explode_header
 )
 import pandas as pd
 from dbvar.database import Databasevar as dbv
@@ -219,15 +219,15 @@ class Checkheader:
         return match
     
     def _fields(self, rows):
-        dico_values = get_header_id(self.header, self.config)
-        #print(dico_values)
-        #print(dico_values.keys())
-        #get field
+        #dico_values = get_header_id(self.header, self.config)
+        #dico_values = explode_header(self.header)
         field = re.findall(r'(?<=##)[^=]+', rows)[0]
-        if field not in dico_values.keys():
+        #header values not in config json allowed
+        if field not in self.config["header"]["field"] and field not in self.config["header"]["extrafield"]:
             self.raise_integrity(field, rows, True)
             #print("WARNING "+field+" is not an allowed value ", self.id_issues(field, self.header['header']))
 
+    #TODO gatk4
     def assembly():
         return
 
@@ -343,6 +343,7 @@ def main_scan(variants, header, args, config):
     headercheck = Checkheader(
             header, {}, config
         ).header_check()
+    explode_header(header)
 
 
 

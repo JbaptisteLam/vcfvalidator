@@ -117,5 +117,5 @@ class Parseoptions:
     def get_args(self):
         # print("#[INFO] args ", self.parseargs())
         # print(type(self.parseargs()))
-        print(self.parseargs())
+        #print(self.parseargs())
         return self.extract(), self.parseargs()

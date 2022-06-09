@@ -141,7 +141,6 @@ def var_to_dataframe(vcf, skiprows, columns):
             if col in df.columns:
                 df[col] = df[col].apply(lambda x: x.replace(",", "."))
                 df[col] = df[col].astype(float)
-    print(df)
     return df
 
 
@@ -160,7 +159,6 @@ def preprocess_vcf(file):
             if lines.split("\t")[0] != "#CHROM":
                 data["header"].append(lines.strip())
             else:
-                print(lines)
                 # data["fields"] = lines.strip().split("\t")
                 data["fields"] = lines.strip()
                 skip.append(i)

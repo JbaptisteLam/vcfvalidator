@@ -57,7 +57,7 @@ class Checkheader:
         # self.rmwhole = self.config["rmall"]
 
     def check_integrity(self):
-        print(self.dico_args)
+        #print(self.dico_args)
         for key, val in self.dico_args.items():
             if val:
                 if key == "edit":
@@ -203,7 +203,24 @@ class Checkheader:
         return self.header
     
     def header_check(self):
-        pass
+        match = []
+        for lines in self.header['header']:
+            #lines = lines.strip()
+            try:
+                str(lines)
+                #print('ok')
+            except SyntaxError:
+                match.append("rows "+str(self.header.index(lines))+" "+ lines)
+        return match
+    
+    def normal_fields():
+        return
+    
+    def extra_fields():
+        return
+    
+    def assembly():
+        return
 
 
 class VCFpreprocess:
@@ -247,6 +264,9 @@ class Checkvariants:
         if self.df.columns[-1] in colus and miss:
             print("WARNING missing SAMPLE " + " ".join(miss) + " columns")
             return True
+        else:
+            print("#[INFO] First 9 columns field are OK")
+            return False
 
     def add_basic(self):
         if self.check_col:
@@ -283,14 +303,13 @@ def main():
         exit()
 
     # Load vcf file
-    vcf = VCFpreprocess(args.vcf)
-    variants, header = vcf.get_values()
+    variants, header = VCFpreprocess(args.vcf).get_values()
 
     # choice main func
     if args.command == "Correct":
         main_correct(variants, header, args, dico_args, output, config)
     elif args.command == "Scan":
-        main_scan(variants, header, args, dico_args, output, config)
+        main_scan(variants, header, args, config)
     elif args.command == "Annotate":
         main_annotate(variants, header, args, output, config)
     else:
@@ -307,7 +326,7 @@ def main_annotate(variants, header, args, dico_args, output, config):
 
     create_vcf(variants, hprocess, output)
 
-def main_scan(variants, header, args, output, config):
+def main_scan(variants, header, args, config):
     print("Check integrity of "+args.vcf+" ...")
     cvar = Checkvariants(variants, "sample")
     variants_new = cvar.check_col()
@@ -315,7 +334,7 @@ def main_scan(variants, header, args, output, config):
     headercheck = Checkheader(
             header, {}, args.config
         ).header_check()
-    pass
+
 
 
 def main_correct(variants, header, args, output, config):
@@ -369,7 +388,7 @@ def main_analyze(variants, header, args, output):
     pass
 
 def main_test(header, config):
-    print(get_header_id(header, config))
+    #print(get_header_id(header, config))
     pass
 
 

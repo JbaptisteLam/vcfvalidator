@@ -348,14 +348,29 @@ def main_scan(variants, header, args, config):
             print(err)
     else:
         print("#[INFO] ASCII Check OK")
-    cvar = Checkvariants(variants, "sample")
-    variants_new = cvar.check_col()
-
-    headercheck = Checkheader(
+    Checkvariants(variants, "sample").check_col()
+    Checkheader(
             header, {}, config
         ).header_check()
     explode_header(header)
 
+    #Explode INFO and FORMAT field and push all in db
+    variants_explode, badannno, list_sample = parse_sample_field(
+        parse_info_field(variants)
+    )
+    if args.dbname:
+        dbname = args.dbname
+    else:
+        dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
+    db = dbv(
+        variants_explode,
+        dbname,
+        os.path.basename(args.vcf),
+        args.tablename,
+        config,
+        explode_header(header)
+    )
+    db.chromosome_check()
 
 
 def main_correct(variants, header, args, output, config):
@@ -387,12 +402,17 @@ def main_correct(variants, header, args, output, config):
         os.path.basename(args.vcf),
         args.tablename,
         config,
+        None
     )
     #FROM dataframe to sql db
     db.create_table()
 
     #chromosome check only if correct mode activate
-    db.chromosome_check()
+    res_chr = db.chromosome_check()
+    if res_chr:
+        print("#[INFO] correct CHR field")
+        for values in res_chr:
+            db.update_value(values)
 
     #Generate vcf only if correction mode is enable
     #from db sql to dataframe after managing
@@ -402,11 +422,11 @@ def main_correct(variants, header, args, output, config):
     #Regenerate vcf final 
     create_vcf(dfwrite, header, output)
 
-def main_analyze(variants, header, args, output):
-    '''
-    check many possible malformation in vcf
-    '''
-    pass
+#def main_analyze(variants, header, args, output):
+#    '''
+#    check many possible malformation in vcf
+#    '''
+#    pass
 
 def main_test(header, config):
     #print(get_header_id(header, config))

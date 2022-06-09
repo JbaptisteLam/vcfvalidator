@@ -7,7 +7,19 @@ import os
 import sys
 import re
 from itertools import zip_longest
-import codecs
+
+# git combo FF, dossier TEST TODO
+def fancystdout(style, text):
+    subprocess.call("pyfiglet -f " + style + " -w 100 " + text)
+
+def launch():
+    message = '''\n
+    <> Author: Jean-Baptiste Lamouche
+    <> Mail: Jbaptiste.lamouche@gmail.com
+    <> Github: https://github.com/JbaptisteLam
+    <> Version: 0.1\n
+    '''
+    return message
 
 def is_utf8(vcf):
     error = []
@@ -21,7 +33,6 @@ def is_utf8(vcf):
             except UnicodeDecodeError:
                 error.append('WARNING row '+str(i+1)+' invalid utf-8')
     return error
-
 
 #DEPRECIATED TODO
 def get_header_id(header, config):
@@ -89,11 +100,11 @@ def parse_sample_field(dfVar):
     sample_list = []
 
     # Parsing FORMAT field in VCF
-    print("[#INFO] Parsing FORMAT field")
+    #print("[#INFO] Parsing FORMAT field")
     isample = list(dfVar.columns).index("FORMAT") + 1
     # index: line where the caller identify an event somethings
     for col in dfVar.columns[isample:]:
-        print("#[INFO] " + col + "\n")
+        #print("#[INFO] " + col + "\n")
         sample_list.append(col)
         for i, row in dfVar.iterrows():
             # print_progress_bar(i, len(dfVar.index)-1)
@@ -132,18 +143,18 @@ def parse_info_field(dfVar):
     dicoInfo = []
     headers = []
 
-    print("#[INFO] Parsing INFO field")
+    #print("#[INFO] Parsing INFO field")
     for i, elems in dfVar.iterrows():
         # print_progress_bar(i, len(dfVar.index)-1)
         infoList.append([x.split("=") for x in elems["INFO"].split(";")])
 
-    print("\n")
+    #print("\n")
 
     [headers.append(elems[0]) for ite in infoList for elems in ite]
     dfInfo = pd.DataFrame(columns=np.unique(np.array(headers)))
-    print(np.unique(np.array(headers)))
+    #print(np.unique(np.array(headers)))
 
-    print("#[INFO] From INFO field to Dataframe")
+    #print("#[INFO] From INFO field to Dataframe")
     for j, elems in enumerate(infoList):
         # print_progress_bar(j, len(infoList)-1)
         add = {}
@@ -157,7 +168,7 @@ def parse_info_field(dfVar):
 
         dicoInfo.append(add)
 
-    print("\n")
+    #print("\n")
     # print(dicoInfo.keys())
     # print(dict(list(dicoInfo.items())[0:2]))
 

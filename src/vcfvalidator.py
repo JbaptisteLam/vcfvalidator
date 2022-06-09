@@ -15,7 +15,8 @@ from utils.utils import (
     systemcall,
     df_to_vcflike,
     create_vcf,
-    explode_header
+    explode_header,
+    is_utf8
 )
 import pandas as pd
 from dbvar.database import Databasevar as dbv
@@ -62,12 +63,12 @@ class Checkheader:
             if val:
                 if key == "edit":
                     for j, val in val.items():
-                        self.raise_integrity(j.split(".")[0], False,  False)
+                        self.raise_integrity(j.split(".")[0], False,  False, None)
                 else:
                     for rows in val:
-                        self.raise_integrity(rows[0], False,  False)
+                        self.raise_integrity(rows[0], False,  False, None)
 
-    def raise_integrity(self, elem, rows, check):
+    def raise_integrity(self, elem, rows, check, type):
         if (
             elem not in self.config["header"]["field"]
             and elem not in self.config["header"]["extrafield"]
@@ -81,7 +82,10 @@ class Checkheader:
                     + ",".join(self.config["header"]["extrafield"])
                 )
             else:
-                print("WARNING "+elem+" not a correct value field", self.id_issues(rows, self.header['header']))
+                if type == 'correctvalue':
+                    print("WARNING "+elem+" not a correct value field", self.id_issues(rows, self.header['header']))
+                elif type == 'malformation':
+                    print("WARNING "+elem+" field is not corectly formated EOL", self.id_issues(rows, self.header['header']))
 
     def add_assembly(self):
         # need install of gatk
@@ -209,6 +213,11 @@ class Checkheader:
     
     def header_check(self):
         match = []
+        #If json is malforammted it header got a problem
+        header_explode, error = explode_header(self.header)
+        for lines in error:
+            self.raise_integrity('Description', lines, True, 'malformation')
+        #check if field are allowed
         for lines in self.header['header']:
             self._fields(lines)
             try:
@@ -224,12 +233,8 @@ class Checkheader:
         field = re.findall(r'(?<=##)[^=]+', rows)[0]
         #header values not in config json allowed
         if field not in self.config["header"]["field"] and field not in self.config["header"]["extrafield"]:
-            self.raise_integrity(field, rows, True)
+            self.raise_integrity(field, rows, True, 'correctvalue')
             #print("WARNING "+field+" is not an allowed value ", self.id_issues(field, self.header['header']))
-
-    #TODO gatk4
-    def assembly():
-        return
 
 
 class VCFpreprocess:
@@ -337,6 +342,12 @@ def main_annotate(variants, header, args, dico_args, output, config):
 
 def main_scan(variants, header, args, config):
     print("Check integrity of "+os.path.abspath(args.vcf)+" ...")
+    errors = is_utf8(args.vcf)
+    if errors:
+        for err in errors:
+            print(err)
+    else:
+        print("#[INFO] ASCII Check OK")
     cvar = Checkvariants(variants, "sample")
     variants_new = cvar.check_col()
 

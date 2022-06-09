@@ -16,7 +16,9 @@ from utils.utils import (
     df_to_vcflike,
     create_vcf,
     explode_header,
-    is_utf8
+    is_utf8,
+    fancystdout,
+    launch
 )
 import pandas as pd
 from dbvar.database import Databasevar as dbv
@@ -299,6 +301,8 @@ class Checkvariants:
 
 
 def main():
+    fancystdout("speed", "VCFvalidator")
+    print(launch())
     opt = Parseoptions()
     # return options parsed in dico format and argparse.Namespace respectively
     dico_args, args = opt.get_args()
@@ -370,7 +374,17 @@ def main_scan(variants, header, args, config):
         config,
         explode_header(header)
     )
+
+    #FROM dataframe to sql db
+    db.create_table()
+
     db.chromosome_check()
+    chann = db.check_annotations()
+    if chann:
+        for items in chann:
+            print("WARNING missing "+items+" in VCF header")
+    else:
+        print("#[INFO] all variants annotations are link with header annotation")
 
 
 def main_correct(variants, header, args, output, config):

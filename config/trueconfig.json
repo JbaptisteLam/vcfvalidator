@@ -1,7 +1,8 @@
 {
     "header":{ 
         "field": ["ID", "ALT", "INFO", "FORMAT", "FILTER", "QUAL"],
-        "extrafield": ["fileformat", "fileDate", "source", "reference", "phasing", "assembly", "contig"]
+        "extrafield": ["fileformat", "fileDate", "source", "reference", "phasing", "assembly", "contig"],
+        "all": ["#CHROM", "ID","POS", "REF", "ALT", "INFO", "FORMAT", "FILTER", "QUAL"]
     },
     "variants":{
         "cast": { "CHROM": "text", "POS": "number", "ID": "text", "QUAL": "number", "FILTER": "text", "INFO": "text", "FORMAT": "text", "SAMPLE": "text"

@@ -33,7 +33,7 @@ class Databasevar:
             self.tablename, self.conn, if_exists="replace", index=False
         )
 
-    def chromosome_check(self):
+    def chromosome_check(self, mode):
         # request = "SELECT * FROM " + self.tablename + " WHERE #CHROM LIKE ", (chr,)
         # self.request(request)
         self.c.execute(
@@ -62,7 +62,6 @@ class Databasevar:
                 print("#[INFO] correct CHR field")
                 for values in res_chr:
                     self.update_value(values)
-            #    for
 
     def update_value(self, old):
         self.c.execute(

@@ -52,7 +52,7 @@ class Checkheader:
         # list of field id to process for each
         # self.rm = self.config["remove"]
         # self.add = self.config["add"]
-        self.config = read_json(trueconfig)
+        self.config = trueconfig
         # self.edit = self.config["edit"]
         # self.rmwhole = self.config["rmall"]
 
@@ -183,7 +183,7 @@ class Checkheader:
         print("#[INFO] Clear whole header")
         self.header.clear()
 
-    def process(self):
+    def correct_header(self):
         ## Act on header vcf
         # check if value are correct
         self.check_integrity()
@@ -201,8 +201,9 @@ class Checkheader:
                     self.remove_row(*rows)
 
         return self.header
-        # if self.rmwhole:
-        #    self.removewhole()
+    
+    def header_check(self):
+        pass
 
 
 class VCFpreprocess:
@@ -223,10 +224,9 @@ class VCFpreprocess:
 
 
 class Checkvariants:
-    def __init__(self, df, samplename, mode):
+    def __init__(self, df, samplename):
         self.df = df
         self.samplename = samplename
-        self.mode = mode
 
     def check_col(self):
         miss = []
@@ -249,15 +249,19 @@ class Checkvariants:
             return True
 
     def add_basic(self):
-        self.df["FORMAT"] = "GT:AD:DP"
-        self.df[self.samplename] = "0/1:50,50:100"
-
-    def process(self):
-        if self.check_col():
-            self.add_basic()
-            return self.df
+        if self.check_col:
+            self.df["FORMAT"] = "GT:AD:DP"
+            self.df[self.samplename] = "0/1:50,50:100"
+            return True
         else:
-            return pd.DataFrame({"emp1": [], "empt2": []})
+            return False
+
+    #def process(self):
+    #    if self.check_col():
+    #        self.add_basic()
+    #        return self.df
+    #    else:
+    #        return pd.DataFrame({"emp1": [], "empt2": []})
 
 
 def main():
@@ -284,39 +288,49 @@ def main():
 
     # choice main func
     if args.command == "Correct":
-        main_correct(variants, header, args, dico_args, output, True)
+        main_correct(variants, header, args, dico_args, output, config)
     elif args.command == "Scan":
-        main_correct(variants, header, args, dico_args, output, False)
+        main_scan(variants, header, args, dico_args, output, config)
     elif args.command == "Annotate":
-        main_annotate(variants, header, args, output)
+        main_annotate(variants, header, args, output, config)
     else:
         main_test(header, config)
 
 
-def main_annotate(variants, header, args, dico_args, output):
+def main_annotate(variants, header, args, dico_args, output, config):
     if dico_args:
         headercheck = Checkheader(header, dico_args, args.config)
-        hprocess = headercheck.process()
+        hprocess = headercheck.correct_header()
 
     else:
         hprocess = header
 
     create_vcf(variants, hprocess, output)
 
-
-def main_correct(variants, header, args, output, mode):
-    #only if correct mode activate #TODO
+def main_scan(variants, header, args, output, config):
     print("Check integrity of "+args.vcf+" ...")
-    cvar = Checkvariants(variants, "sample", mode)
-    if mode:
-        variants_new = cvar.process()
-        # add correct columln
-        # header with basic GT AD and DP add
-        if not variants_new.empty:
-            headercheck = Checkheader(
-                header, read_json(args.config)["variants"]["basic"], args.config
-            ).process()
+    cvar = Checkvariants(variants, "sample")
+    variants_new = cvar.check_col()
 
+    headercheck = Checkheader(
+            header, {}, args.config
+        ).header_check()
+    pass
+
+
+def main_correct(variants, header, args, output, config):
+    #only if correct mode activate #TODO
+    #print("Check integrity of "+args.vcf+" ...")
+    # add correct column
+    # header with basic GT AD and DP add
+    cvar = Checkvariants(variants, "sample")
+    #return True if basic columns where add false otherwise
+    variants_new = cvar.add_basic()
+
+    if not variants_new:
+        headercheck = Checkheader(
+            header, config["variants"]["basic"], args.config
+        ).correct_header()
     #explode INFO and SAMPLE field
     variants_explode, badannno, list_sample = parse_sample_field(
         parse_info_field(variants)
@@ -332,14 +346,20 @@ def main_correct(variants, header, args, output, mode):
         dbname,
         os.path.basename(args.vcf),
         args.tablename,
-        read_json(args.config),
+        config,
     )
+    #FROM dataframe to sql db
     db.create_table()
+
     #chromosome check only if correct mode activate
-    #db.chromosome_check()
+    db.chromosome_check()
+
+    #Generate vcf only if correction mode is enable
+    #from db sql to dataframe after managing
     dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
     dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin")
 
+    #Regenerate vcf final 
     create_vcf(dfwrite, header, output)
 
 def main_analyze(variants, header, args, output):

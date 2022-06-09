@@ -13,7 +13,7 @@ def fancystdout(style, text):
     subprocess.call("pyfiglet -f " + style + " -w 100 " + text)
 
 def launch():
-    message = '''\n
+    message = '''\ngit
     <> Author: Jean-Baptiste Lamouche
     <> Mail: Jbaptiste.lamouche@gmail.com
     <> Github: https://github.com/JbaptisteLam
@@ -66,11 +66,16 @@ def explode_header(header):
                 dico[desc[0]] = {}
             #for each value in field ID, maximum split 3 to avoid split in description field (description should be the last) TODO
             tmp = {}
+            #TODO need to split before Description to avoid issues
             for it in re.search('<(.*)>', desc[1]).group(1).split(',', 3):
                 field = it.split('=')
-                key = field[0]
-                value = field[1]
-                tmp[key] = value
+                try:
+                    key = field[0]
+                    value = field[1]
+                    tmp[key] = value
+                except IndexError:
+                    print("WARNING probably wrong header row ",field)
+                    exit()
                 #Check if Description field is correct
                 if key == 'Description':
                     if not value.startswith('"') or not value.endswith('"'):

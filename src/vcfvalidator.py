@@ -85,7 +85,7 @@ class Checkheader:
                 if type == 'correctvalue':
                     print("WARNING "+elem+" not a correct value field", self.id_issues(rows, self.header['header']))
                 elif type == 'malformation':
-                    print("WARNING "+elem+" field is not corectly formated EOL", self.id_issues(rows, self.header['header']))
+                    print("WARNING "+elem+" field is not correctly formated EOL", self.id_issues(rows, self.header['header']))
 
     def add_assembly(self):
         # need install of gatk

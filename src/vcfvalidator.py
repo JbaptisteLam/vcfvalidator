@@ -62,24 +62,26 @@ class Checkheader:
             if val:
                 if key == "edit":
                     for j, val in val.items():
-                        self.raise_integrity(j.split(".")[0])
+                        self.raise_integrity(j.split(".")[0], False,  False)
                 else:
                     for rows in val:
-                        self.raise_integrity(rows[0])
+                        self.raise_integrity(rows[0], False,  False)
 
-    def raise_integrity(self, elem):
+    def raise_integrity(self, elem, rows, check):
         if (
             elem not in self.config["header"]["field"]
             and elem not in self.config["header"]["extrafield"]
         ):
-
-            raise ValueError(
-                "'"
-                + elem
-                + "' is not a correct value field \n\t Correct values are "
-                + ",".join(self.config["header"]["field"])
-                + ",".join(self.config["header"]["extrafield"])
-            )
+            if not check:
+                raise ValueError(
+                    "'"
+                    + elem
+                    + "' is not a correct value field \n\t Correct values are "
+                    + ",".join(self.config["header"]["field"])
+                    + ",".join(self.config["header"]["extrafield"])
+                )
+            else:
+                print("WARNING "+elem+" not a correct value field", self.id_issues(rows, self.header['header']))
 
     def add_assembly(self):
         # need install of gatk
@@ -202,23 +204,30 @@ class Checkheader:
 
         return self.header
     
+    def id_issues(self, lines, iterable):
+        return "rows "+str(iterable.index(lines)+1)+" "+ lines
+    
     def header_check(self):
         match = []
         for lines in self.header['header']:
-            #lines = lines.strip()
+            self._fields(lines)
             try:
                 str(lines)
                 #print('ok')
             except SyntaxError:
-                match.append("rows "+str(self.header.index(lines))+" "+ lines)
+                match.append(self.id_issues(lines))
         return match
     
-    def normal_fields():
-        return
-    
-    def extra_fields():
-        return
-    
+    def _fields(self, rows):
+        dico_values = get_header_id(self.header, self.config)
+        #print(dico_values)
+        #print(dico_values.keys())
+        #get field
+        field = re.findall(r'(?<=##)[^=]+', rows)[0]
+        if field not in dico_values.keys():
+            self.raise_integrity(field, rows, True)
+            #print("WARNING "+field+" is not an allowed value ", self.id_issues(field, self.header['header']))
+
     def assembly():
         return
 
@@ -332,7 +341,7 @@ def main_scan(variants, header, args, config):
     variants_new = cvar.check_col()
 
     headercheck = Checkheader(
-            header, {}, args.config
+            header, {}, config
         ).header_check()
 
 

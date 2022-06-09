@@ -16,7 +16,7 @@ def get_header_id(header, config):
             if not field in header_infos:
                 header_infos[field] = []
             id = re.findall(r'(?<=ID=)[^,]+', rows)[0]
-            print(id)
+            #print(id)
             header_infos[field].append(id)
     #print(header_infos)
     return header_infos

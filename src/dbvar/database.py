@@ -149,5 +149,33 @@ class Databasevar:
         names = [description[0] for description in self.c.description]
         return names
 
+    #Edit INFO fields annotations 
     def db_to_dataframe(self):
         return self.c.fetchall()
+    
+    def correct_variants(self):
+        ## Act on header vcf
+        # check if value are correct
+        for actions, values in self.dico_args.items():
+            ##if user need adding row
+            #if actions == "add" and values:
+            #    for rows in values:
+            #        if not self.matching_line(rows[0], rows[1]):
+            #            self.add_row(*rows)
+            #if actions == "edit" and values:
+            #    for key, rows in values.items():
+            #        self.edit_row(key, rows)
+            if actions == "remove" and values:
+                for rows in values:
+                    self.remove_row(*rows)
+        return self.header
+
+    def add_info(self):
+        pass
+
+    def rm_info(self, col):
+        self.c.execute("ALTER TABLE "+self.tablename+" DROP COLUMN "+col)
+        self.conn.commit()
+
+    def edit_info(self):
+        pass

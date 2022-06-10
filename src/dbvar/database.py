@@ -18,7 +18,10 @@ class Databasevar:
         self.df_variants = df_variants
         self.tablename = tablename
         self.config = config
-        self.header = header_explode[0]
+        try:
+            self.header = header_explode[0]
+        except TypeError:
+            self.header = False
         print("#[INFO] SQLite " + db + " connected ")
 
     def request(self, request):
@@ -89,7 +92,7 @@ class Databasevar:
                 return False
             else:
                 print("WARNING some variants do not have 'chr' in #CHROM col ", res_chr)
-                return self.c.fetchall()
+                return res_chr
         #All variants do not have chr in #CHROM column
         elif len(res) == 0:
             print("WARNING any variants got 'chr' in #CHROM col")
@@ -139,6 +142,12 @@ class Databasevar:
                 replace = "replace" if i == 0 else "append"
                 cdf.to_sql(con=con, name=self.tablename, if_exists=replace, index=False)
                 pbar.update(chunksize)
+
+
+    def get_col_name(self):
+        self.c.execute('SELECT * from '+self.tablename)
+        names = [description[0] for description in self.c.description]
+        return names
 
     def db_to_dataframe(self):
         return self.c.fetchall()

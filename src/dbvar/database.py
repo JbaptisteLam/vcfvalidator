@@ -48,7 +48,10 @@ class Databasevar:
         # print(len(res))
         # print(type(self.c.fetchall()))
         # print(len(self.df_variants.index))
-        if len(res) != len(self.df_variants.index):
+        #If not all variants got chr in #CHROM column
+        #print(len(res))
+        #print(len(self.df_variants.index))
+        if len(res) != len(self.df_variants.index) and len(res) != 0:
             self.c.execute(
                 "SELECT [#CHROM], POS from "
                 + self.tablename
@@ -63,8 +66,17 @@ class Databasevar:
                 print("#[INFO] Chromosomes check OK")
                 return False
             else:
-                print("WARNING some variants are not conform ", res_chr)
+                print("WARNING some variants do not have 'chr' in #CHROM col ", res_chr)
                 return self.c.fetchall()
+        #All variants do not have chr in #CHROM column
+        elif len(res) == 0:
+            print("WARNING any variants got 'chr' in #CHROM col")
+            return self.c.execute(
+                "SELECT [#CHROM], POS from "
+                + self.tablename)
+
+
+
 
 
     def update_value(self, old):

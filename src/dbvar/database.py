@@ -3,7 +3,11 @@ import sqlite3
 import ssl
 from textwrap import indent
 import json
-
+from tqdm import tqdm
+from utils.utils import (
+    parse_sample_field,
+    parse_info_field
+)
 
 class Databasevar:
     def __init__(self, df_variants, db, vcfname, tablename, config, header_explode):
@@ -32,10 +36,28 @@ class Databasevar:
     def update(self):
         pass
 
-    def create_table(self):
-        self.df_variants.to_sql(
-            self.tablename, self.conn, if_exists="replace", index=False
-        )
+    def table_exists(self):
+        #print("SELECT name FROM sqlite_temp_master WHERE type='table' AND name='"+self.tablename+"'")
+        #self.c.execute("SELECT name FROM sqlite_temp_master WHERE type='table' AND name='"+self.tablename+"'")
+        self.c.execute('SELECT name from sqlite_master where type= "table"')
+        for tables in self.c.fetchall():
+            if tables[0] == self.tablename:
+                print("#[INFO] Table '"+self.tablename+"' already exists, remove if the db need cleaning args TODO")
+                return True
+        return False
+    
+    def explode_annotations(self):
+        df_variants, badanno, list_sample = parse_sample_field(
+        parse_info_field(self.df_variants))
+        return df_variants, badanno, list_sample
+
+
+    def create_table(self, variants):
+        #self.df_variants.to_sql(
+        #    self.tablename, self.conn, if_exists="replace", index=False
+        #)
+        print("#[INFO] Create Table "+self.tablename)
+        self.insert_with_progress(self.explode_annotations()[0], self.db)
 
     def chromosome_check(self):
         # request = "SELECT * FROM " + self.tablename + " WHERE #CHROM LIKE ", (chr,)
@@ -75,10 +97,6 @@ class Databasevar:
                 "SELECT [#CHROM], POS from "
                 + self.tablename)
 
-
-
-
-
     def update_value(self, old):
         self.c.execute(
             "UPDATE "
@@ -103,6 +121,21 @@ class Databasevar:
                 and not col in self.config['header']['all']:
                 miss.append(col)   
         return miss
+
+    @staticmethod
+    def chunker(seq, size):
+        # from http://stackoverflow.com/a/434328
+        return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
+    def insert_with_progress(self, df, dbfile):
+        #from https://stackoverflow.com/a/39495229
+        con = sqlite3.connect(dbfile)
+        chunksize = int(len(df) / 10) # 10%
+        with tqdm(total=len(df), desc="#[INFO] From dataframe to DB, chunksize: "+str(chunksize)) as pbar:
+            for i, cdf in enumerate(self.chunker(df, chunksize)):
+                replace = "replace" if i == 0 else "append"
+                cdf.to_sql(con=con, name="MLS", if_exists=replace, index=False)
+                pbar.update(chunksize)
 
     def db_to_dataframe(self):
         return self.c.fetchall()

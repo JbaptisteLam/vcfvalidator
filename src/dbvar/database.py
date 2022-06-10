@@ -52,7 +52,7 @@ class Databasevar:
         return df_variants, badanno, list_sample
 
 
-    def create_table(self, variants):
+    def create_table(self):
         #self.df_variants.to_sql(
         #    self.tablename, self.conn, if_exists="replace", index=False
         #)
@@ -131,10 +131,10 @@ class Databasevar:
         #from https://stackoverflow.com/a/39495229
         con = sqlite3.connect(dbfile)
         chunksize = int(len(df) / 10) # 10%
-        with tqdm(total=len(df), desc="#[INFO] From dataframe to DB, chunksize: "+str(chunksize)) as pbar:
+        with tqdm(total=len(df), ascii=False, color='green', desc="#[INFO] From dataframe to DB, chunksize: "+str(chunksize)) as pbar:
             for i, cdf in enumerate(self.chunker(df, chunksize)):
                 replace = "replace" if i == 0 else "append"
-                cdf.to_sql(con=con, name="MLS", if_exists=replace, index=False)
+                cdf.to_sql(con=con, name=self.tablename, if_exists=replace, index=False)
                 pbar.update(chunksize)
 
     def db_to_dataframe(self):

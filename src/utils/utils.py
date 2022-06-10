@@ -7,10 +7,24 @@ import os
 import sys
 import re
 from itertools import zip_longest
+from tqdm import tqdm
 
 # git combo FF, dossier TEST TODO
 def fancystdout(style, text):
     subprocess.call("pyfiglet -f " + style + " -w 100 " +text)
+
+#class Launch:
+#    def __init__(self) -> None:
+#        pass
+#
+#    def launch():
+#        message = '''\n
+#        <> Author: Jean-Baptiste Lamouche
+#        <> Mail: Jbaptiste.lamouche@gmail.com
+#        <> Github: https://github.com/JbaptisteLam
+#        <> Version: 0.1\n
+#        '''
+#        return message
 
 def launch():
     message = '''\n
@@ -67,14 +81,14 @@ def explode_header(header):
             #for each value in field ID, maximum split 3 to avoid split in description field (description should be the last) TODO
             tmp = {}
             #TODO need to split before Description to avoid issues
-            r = re.search('<(.*)', desc[1]).group(1)
+            r = re.search('<(.*)>', desc[1]).group(1)
             wde = re.search('(.*),Description' ,r).group(1)
             #if row contain Description (it should be)
             if wde:
                 hook = wde.split(',')
                 hook.append('Description='+re.search('Description=(.*)' ,r).group(1))
             else:
-                hook = re.search('<(.*)', desc[1]).group(1)
+                hook = r
             for it in hook:
                 field = it.split('=')
                 try:
@@ -87,6 +101,10 @@ def explode_header(header):
                 #Check if Description field is correct
                 if key == 'Description':
                     if not value.startswith('"') or not value.endswith('"'):
+                        print(it)
+                        print(field)
+                        print(key, value)
+                        exit()
                         error.append(lines)
             #STACK ID value as dict name and other values key pair in level -1
             if 'ID' in tmp.keys():
@@ -100,7 +118,7 @@ def explode_header(header):
         elif not effective.startswith("contig"):
             val = effective.split('=')
             dico[val[0]] = val[1]
-    print(json.dumps(dico, indent=4))
+    #print(json.dumps(dico, indent=4))
     return dico, error
 
 def parse_sample_field(dfVar):
@@ -117,10 +135,10 @@ def parse_sample_field(dfVar):
     #print("[#INFO] Parsing FORMAT field")
     isample = list(dfVar.columns).index("FORMAT") + 1
     # index: line where the caller identify an event somethings
-    for col in dfVar.columns[isample:]:
+    for col in (dfVar.columns[isample:]):
         #print("#[INFO] " + col + "\n")
         sample_list.append(col)
-        for i, row in dfVar.iterrows():
+        for i, row in tqdm(dfVar.iterrows(), total=dfVar.shape[0], leave=False, desc='SAMPLE column split'):
             # print_progress_bar(i, len(dfVar.index)-1)
             # print('\n')
             # print(row['FORMAT'].split(':'), row['bwamem.VarScan_HUSTUMSOL.howard'].split(':'))
@@ -158,7 +176,7 @@ def parse_info_field(dfVar):
     headers = []
 
     #print("#[INFO] Parsing INFO field")
-    for i, elems in dfVar.iterrows():
+    for i, elems in tqdm(dfVar.iterrows(), total=dfVar.shape[0], desc='INFO field split'):
         # print_progress_bar(i, len(dfVar.index)-1)
         infoList.append([x.split("=") for x in elems["INFO"].split(";")])
 
@@ -223,7 +241,8 @@ def var_to_dataframe(vcf, skiprows, columns):
             if col in df.columns:
                 df[col] = df[col].apply(lambda x: x.replace(",", "."))
                 df[col] = df[col].astype(float)
-    return df
+                #TODO
+    return df.iloc[:10000]
 
 
 # utils

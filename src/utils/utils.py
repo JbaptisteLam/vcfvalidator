@@ -138,7 +138,7 @@ def parse_sample_field(dfVar):
     for col in (dfVar.columns[isample:]):
         #print("#[INFO] " + col + "\n")
         sample_list.append(col)
-        for i, row in tqdm(dfVar.iterrows(), total=dfVar.shape[0], leave=False, desc='SAMPLE column split'):
+        for i, row in tqdm(dfVar.iterrows(), total=dfVar.shape[0], leave=True, desc='#[INFO] SAMPLE column split'):
             # print_progress_bar(i, len(dfVar.index)-1)
             # print('\n')
             # print(row['FORMAT'].split(':'), row['bwamem.VarScan_HUSTUMSOL.howard'].split(':'))
@@ -176,7 +176,7 @@ def parse_info_field(dfVar):
     headers = []
 
     #print("#[INFO] Parsing INFO field")
-    for i, elems in tqdm(dfVar.iterrows(), total=dfVar.shape[0], desc='INFO field split'):
+    for i, elems in tqdm(dfVar.iterrows(), total=dfVar.shape[0], desc='#[INFO] INFO column split'):
         # print_progress_bar(i, len(dfVar.index)-1)
         infoList.append([x.split("=") for x in elems["INFO"].split(";")])
 

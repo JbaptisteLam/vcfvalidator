@@ -43,7 +43,7 @@ def main():
 
     # choice main func
     if args.command == "Correct":
-        main_correct(variants, header, args, dico_args, output, config)
+        main_correct(variants, header, args, output, config)
     elif args.command == "Scan":
         main_scan(variants, header, args, config)
     elif args.command == "Annotate":
@@ -53,6 +53,9 @@ def main():
 
 
 def main_annotate(variants, header, args, dico_args, output, config):
+    #could return df if change have been done
+ 
+    #
     if dico_args:
         headercheck = Checkheader(header, dico_args, args.config)
         hprocess = headercheck.correct_header()
@@ -111,38 +114,44 @@ def main_scan(variants, header, args, config):
 
 
 def main_correct(variants, header, args, output, config):
+    print("Correct "+os.path.abspath(args.vcf)+" ...\n")
     #only if correct mode activate #TODO
     #print("Check integrity of "+args.vcf+" ...")
     # add correct column
     # header with basic GT AD and DP add
     cvar = Checkvariants(variants, "sample")
+    
     #return True if basic columns where add false otherwise
     variants_new = cvar.add_basic()
 
-    if not variants_new:
-        headercheck = Checkheader(
-            header, config["variants"]["basic"], args.config
+    if variants_new:
+        Checkheader(
+            header, config["variants"]["basic"], config
         ).correct_header()
-    #explode INFO and SAMPLE field
-    variants_explode, badannno, list_sample = parse_sample_field(
-        parse_info_field(variants)
-    )
+
     # worked
-    # tablename = "variants"
     if args.dbname:
         dbname = args.dbname
     else:
         dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
+    
+    if args.tablename:
+        tablename = args.tablename
+    else:
+        tablename = os.path.basename(args.vcf).split('.', 1)[0]
+
     db = dbv(
-        variants_explode,
+        variants,
         dbname,
         os.path.basename(args.vcf),
-        args.tablename,
+        tablename,
         config,
         None
     )
-    #FROM dataframe to sql db
-    db.create_table()
+
+    if not db.table_exists():
+        #FROM dataframe to sql db
+        db.create_table()
 
     #chromosome check only if correct mode activate
     res_chr = db.chromosome_check()
@@ -152,12 +161,13 @@ def main_correct(variants, header, args, output, config):
             db.update_value(values)
 
     #Generate vcf only if correction mode is enable
-    #from db sql to dataframe after managing
-    dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=variants_explode.columns)
+    #from db sql to dataframe after managing  columns contains INFO and format split so more than 10 for multisample
+    dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=db.get_col_name())
     dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin")
 
+    print(dfwrite)
     #Regenerate vcf final 
-    create_vcf(dfwrite, header, output)
+    #create_vcf(dfwrite, header, output)
 
 #def main_analyze(variants, header, args, output):
 #    '''

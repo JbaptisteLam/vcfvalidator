@@ -96,6 +96,12 @@ class Parseoptions:
             type=str,
             help="Name of variant database, if not provided it will be set at input vcf name",
         )
+        parser_annotate.add_argument(
+            "-t",
+            "--tablename",
+            type=str,
+            help="name of table database",
+        )
 
         # VCF Scan ----------------
         parser_scan = subparsers.add_parser(

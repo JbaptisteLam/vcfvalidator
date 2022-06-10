@@ -1,3 +1,4 @@
+from email import message
 from posixpath import sep
 import pandas as pd
 import json
@@ -13,18 +14,17 @@ from tqdm import tqdm
 def fancystdout(style, text):
     subprocess.call("pyfiglet -f " + style + " -w 100 " +text)
 
-#class Launch:
-#    def __init__(self) -> None:
-#        pass
-#
-#    def launch():
-#        message = '''\n
-#        <> Author: Jean-Baptiste Lamouche
-#        <> Mail: Jbaptiste.lamouche@gmail.com
-#        <> Github: https://github.com/JbaptisteLam
-#        <> Version: 0.1\n
-#        '''
-#        return message
+class Launch:
+    def __init__(self):
+        self.message = '''\n
+        <> Author: Jean-Baptiste Lamouche\n
+        <> Mail: Jbaptiste.lamouche@gmail.com\n
+        <> Github: https://github.com/JbaptisteLam\n
+        <> Version: 0.1\n
+        '''
+
+    def __str__(self):
+        subprocess.call("printf '"+self.message+"'")
 
 def launch():
     message = '''\n
@@ -33,7 +33,7 @@ def launch():
     <> Github: https://github.com/JbaptisteLam
     <> Version: 0.1\n
     '''
-    return message
+    print(message)
 
 def is_utf8(vcf):
     error = []
@@ -243,6 +243,7 @@ def var_to_dataframe(vcf, skiprows, columns):
                 df[col] = df[col].astype(float)
                 #TODO
     return df.iloc[:10000]
+    #return df
 
 
 # utils

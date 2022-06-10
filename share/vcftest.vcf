@@ -29,7 +29,7 @@
 ##contig=<ID=chr12,assembly=hg19,length=133851895>
 ##contig=<ID=chr13,assembly=hg19,length=115169878>
 ##contig=<ID=chr22,assembly=hg19,length=51304566>
-##INFO=<ID=AF_ESP,Number=1,Type=Float,Description="allele frequencies from GO-ESP>
+##INFO=<ID=AF_ESP,Number=1,Type=Float,Description="allele frequencies from GO-ESP">
 ##INFO=<ID=AF_EXAC,Number=1,Type=Float,Description="allele frequencies from ExAC">
 ##INFO=<ID=AF_TGP,Number=1,Type=Float,Description="allele frequencies from TGP">
 ##INFO=<ID=ALLELEID,Number=1,Type=Integer,Description="the ClinVar Allele ID">
@@ -53,7 +53,7 @@
 ##INFO=<ID=SSR,Number=1,Type=Integer,Description="Variant Suspect Reason Codes. One or more of the following values may be added: 0 - unspecified, 1 - Paralog, 2 - byEST, 4 - oldAlign, 8 - Para_EST, 16 - 1kg_failed, 1024 - other">
 ##FORMAT=<ID=DP,Number=1,Type=String,Description="Depth of coverage">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##FORMAT=<ID=AD,Number=1,Type=String,Description="AlleleDepth">°°
+##FORMAT=<ID=AD,Number=1,Type=String,Description="AlleleDepth">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Likelybenin_Clinvar
 chr1	865519	1125147	C	T	.	.	ALLELEID=1110865;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000001.10:g.865519C>T;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=SAMD11:148398;MC=SO:0001627|intron_variant;ORIGIN=1	GT:AD:DP	0/1:50,50:100
 chr2	271918	756151	C	T	.	.	AF_ESP=0.00015;AF_EXAC=0.00005;ALLELEID=763153;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000002.11:g.271918C>T;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=ACP1:52;MC=SO:0001619|non-coding_transcript_variant,SO:0001819|synonymous_variant;ORIGIN=1;RS=142497773	GT:AD:DP	0/1:50,50:100

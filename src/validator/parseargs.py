@@ -122,6 +122,19 @@ class Parseoptions:
             help="Correct VCF header regarding variants annotations",
             # formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
+        parser_correct.add_argument(
+            "-db",
+            "--dbname",
+            type=str,
+            help="Name of variant database, if not provided it will be set at input vcf name",
+        )
+        parser_correct.add_argument(
+            "-t",
+            "--tablename",
+            type=str,
+            help="name of table database",
+        )
+
 
         args = parser.parse_args()
         return args

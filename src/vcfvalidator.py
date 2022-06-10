@@ -81,12 +81,16 @@ def main_scan(variants, header, args, config):
     else:
         dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
     
+    if args.tablename:
+        tablename = args.tablename
+    else:
+        tablename = os.path.basename(args.vcf).split('.', 1)[0]
 
     db = dbv(
         variants,
         dbname,
         os.path.basename(args.vcf),
-        args.tablename,
+        tablename,
         config,
         xh
     )
@@ -100,7 +104,7 @@ def main_scan(variants, header, args, config):
         for items in chann:
             print("WARNING missing "+items+" in VCF header")
     else:
-        print("#[INFO] all variants annotations are link with header annotation")
+        print("#[INFO] all variants annotations are linked with header annotation")
     
     with open('json_data.json', 'w+') as outfile:
         json.dump(xh, outfile, indent=4)

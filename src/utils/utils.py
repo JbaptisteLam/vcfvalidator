@@ -82,7 +82,10 @@ def explode_header(header):
             tmp = {}
             #TODO need to split before Description to avoid issues
             r = re.search('<(.*)>', desc[1]).group(1)
-            wde = re.search('(.*),Description' ,r).group(1)
+            try:
+                wde = re.search('(.*),Description' ,r).group(1)
+            except AttributeError:
+                wde = r
             #if row contain Description (it should be)
             if wde:
                 hook = wde.split(',')
@@ -101,10 +104,6 @@ def explode_header(header):
                 #Check if Description field is correct
                 if key == 'Description':
                     if not value.startswith('"') or not value.endswith('"'):
-                        print(it)
-                        print(field)
-                        print(key, value)
-                        exit()
                         error.append(lines)
             #STACK ID value as dict name and other values key pair in level -1
             if 'ID' in tmp.keys():
@@ -138,7 +137,7 @@ def parse_sample_field(dfVar):
     for col in (dfVar.columns[isample:]):
         #print("#[INFO] " + col + "\n")
         sample_list.append(col)
-        for i, row in tqdm(dfVar.iterrows(), total=dfVar.shape[0], leave=True, desc='#[INFO] SAMPLE column split'):
+        for i, row in tqdm(dfVar.iterrows(), total=dfVar.shape[0], ascii=False, color='green', leave=True, desc='#[INFO] SAMPLE column split'):
             # print_progress_bar(i, len(dfVar.index)-1)
             # print('\n')
             # print(row['FORMAT'].split(':'), row['bwamem.VarScan_HUSTUMSOL.howard'].split(':'))
@@ -176,7 +175,7 @@ def parse_info_field(dfVar):
     headers = []
 
     #print("#[INFO] Parsing INFO field")
-    for i, elems in tqdm(dfVar.iterrows(), total=dfVar.shape[0], desc='#[INFO] INFO column split'):
+    for i, elems in tqdm(dfVar.iterrows(), total=dfVar.shape[0], ascii=False, color='green', desc='#[INFO] INFO column split'):
         # print_progress_bar(i, len(dfVar.index)-1)
         infoList.append([x.split("=") for x in elems["INFO"].split(";")])
 
@@ -245,8 +244,8 @@ def var_to_dataframe(vcf, skiprows, columns):
                 df[col] = df[col].apply(lambda x: x.replace(",", "."))
                 df[col] = df[col].astype(float)
                 #TODO
-    return df.iloc[:10000]
-    #return df
+    #return df.iloc[:10000]
+    return df
 
 
 # utils

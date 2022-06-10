@@ -10,16 +10,17 @@ from utils.utils import (
     read_json,
     preprocess_vcf,
     var_to_dataframe,
-    parse_sample_field,
-    parse_info_field,
     systemcall,
     df_to_vcflike,
     create_vcf,
     explode_header,
     is_utf8,
     fancystdout,
+    Launch,
     launch
 )
+import time
+import json
 import pandas as pd
 from dbvar.database import Databasevar as dbv
 from validator.parseargs import Parseoptions
@@ -303,8 +304,6 @@ class Checkvariants:
 
 
 def main():
-    fancystdout("speed", "VCFvalidator")
-    print(launch())
     opt = Parseoptions()
     # return options parsed in dico format and argparse.Namespace respectively
     dico_args, args = opt.get_args()
@@ -347,7 +346,7 @@ def main_annotate(variants, header, args, dico_args, output, config):
     create_vcf(variants, hprocess, output)
 
 def main_scan(variants, header, args, config):
-    print("Check integrity of "+os.path.abspath(args.vcf)+" ...")
+    print("Check integrity of "+os.path.abspath(args.vcf)+" ...\n")
     errors = is_utf8(args.vcf)
     if errors:
         for err in errors:
@@ -358,27 +357,25 @@ def main_scan(variants, header, args, config):
     Checkheader(
             header, {}, config
         ).header_check()
-    explode_header(header)
+    xh = explode_header(header)
 
-    #Explode INFO and FORMAT field and push all in db
-    variants_explode, badannno, list_sample = parse_sample_field(
-        parse_info_field(variants)
-    )
     if args.dbname:
         dbname = args.dbname
     else:
         dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
+    
+
     db = dbv(
-        variants_explode,
+        variants,
         dbname,
         os.path.basename(args.vcf),
         args.tablename,
         config,
-        explode_header(header)
+        xh
     )
-
-    #FROM dataframe to sql db
-    db.create_table()
+    if not db.table_exists():
+        #FROM dataframe to sql db
+        db.create_table()
 
     db.chromosome_check()
     chann = db.check_annotations()
@@ -387,6 +384,9 @@ def main_scan(variants, header, args, config):
             print("WARNING missing "+items+" in VCF header")
     else:
         print("#[INFO] all variants annotations are link with header annotation")
+    
+    with open('json_data.json', 'w+') as outfile:
+        json.dump(xh, outfile, indent=4)
 
 
 def main_correct(variants, header, args, output, config):
@@ -450,4 +450,6 @@ def main_test(header, config):
 
 
 if __name__ == "__main__":
+    fancystdout("speed", "VCFvalidator")
+    Launch().__str__()
     main()

@@ -217,14 +217,16 @@ class Checkheader:
         match = []
         #If json is malforammted it header got a problem
         header_explode, error = explode_header(self.header)
-        for lines in error:
-            self.raise_integrity('Description', lines, True, 'malformation')
+        if error:
+            for lines in error:
+                self.raise_integrity('Description', lines, True, 'malformation')
+        else:
+            print("#[INFO] Header properly formated")
         #check if field are allowed
         for lines in self.header['header']:
             self._fields(lines)
             try:
                 str(lines)
-                #print('ok')
             except SyntaxError:
                 match.append(self.id_issues(lines))
         return match
@@ -443,7 +445,7 @@ def main_correct(variants, header, args, output, config):
 #    pass
 
 def main_test(header, config):
-    #print(get_header_id(header, config))
+    #print(explode_header(header))
     pass
 
 

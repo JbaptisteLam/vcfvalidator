@@ -67,15 +67,23 @@ def explode_header(header):
             #for each value in field ID, maximum split 3 to avoid split in description field (description should be the last) TODO
             tmp = {}
             #TODO need to split before Description to avoid issues
-            for it in re.search('<(.*)>', desc[1]).group(1).split(',', 3):
+            r = re.search('<(.*)', desc[1]).group(1)
+            wde = re.search('(.*),Description' ,r).group(1)
+            #if row contain Description (it should be)
+            if wde:
+                hook = wde.split(',')
+                hook.append('Description='+re.search('Description=(.*)' ,r).group(1))
+            else:
+                hook = re.search('<(.*)', desc[1]).group(1)
+            for it in hook:
                 field = it.split('=')
                 try:
                     key = field[0]
                     value = field[1]
                     tmp[key] = value
                 except IndexError:
-                    print("WARNING probably wrong header row ",field)
-                    exit()
+                    print("WARNING probably wrong header row ", field)
+                    #exit()
                 #Check if Description field is correct
                 if key == 'Description':
                     if not value.startswith('"') or not value.endswith('"'):
@@ -87,11 +95,12 @@ def explode_header(header):
                 dico[desc[0]][value] = tmp
             else:
                 dico[desc[0]] = tmp
+            #print(tmp)
         #extra field values 
         elif not effective.startswith("contig"):
             val = effective.split('=')
             dico[val[0]] = val[1]
-    #print(json.dumps(dico, indent=4))
+    print(json.dumps(dico, indent=4))
     return dico, error
 
 def parse_sample_field(dfVar):

@@ -130,8 +130,11 @@ class Databasevar:
     def insert_with_progress(self, df, dbfile):
         #from https://stackoverflow.com/a/39495229
         con = sqlite3.connect(dbfile)
+        #case of less than 10 var in dataframe
         chunksize = int(len(df) / 10) # 10%
-        with tqdm(total=len(df), ascii=False, color='green', desc="#[INFO] From dataframe to DB, chunksize: "+str(chunksize)) as pbar:
+        if chunksize < 1:
+            chunksize = 1
+        with tqdm(total=len(df), desc="#[INFO] From dataframe to DB, chunksize: "+str(chunksize)) as pbar:
             for i, cdf in enumerate(self.chunker(df, chunksize)):
                 replace = "replace" if i == 0 else "append"
                 cdf.to_sql(con=con, name=self.tablename, if_exists=replace, index=False)

@@ -29,7 +29,7 @@ class Launch:
 def launch():
     message = '''\n
     <> Author: Jean-Baptiste Lamouche
-    <> Mail: Jbaptiste.lamouche@gmail.com
+    <> Mail: jbaptiste.lamouche@gmail.com
     <> Github: https://github.com/JbaptisteLam
     <> Version: 0.1\n
     '''
@@ -210,6 +210,9 @@ def parse_info_field(dfVar):
     # Drop old columns info
     # dfInfo.drop(columns="INFO", inplace=True)
     df = dfInfo.join(dfVar.iloc[:, 8:], how="inner")
+    #drop possible no annotation, stack like a '.' col
+    if '.' in df.columns:
+        df.drop(columns='.', inplace=True)
     return df
 
 

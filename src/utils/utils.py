@@ -10,10 +10,10 @@ from itertools import zip_longest
 
 # git combo FF, dossier TEST TODO
 def fancystdout(style, text):
-    subprocess.call("pyfiglet -f " + style + " -w 100 " + text)
+    subprocess.call("pyfiglet -f " + style + " -w 100 " +text)
 
 def launch():
-    message = '''\ngit
+    message = '''\n
     <> Author: Jean-Baptiste Lamouche
     <> Mail: Jbaptiste.lamouche@gmail.com
     <> Github: https://github.com/JbaptisteLam

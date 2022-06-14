@@ -9,10 +9,15 @@ import sys
 import re
 from itertools import zip_longest
 from tqdm import tqdm
+from pyfiglet import Figlet
 
 # git combo FF, dossier TEST TODO
 def fancystdout(style, text):
-    subprocess.call("pyfiglet -f " + style + " -w 100 " +text)
+    try:    
+        subprocess.call("/bin/bash -c 'pyfiglet -f " + style + " -w 100 " +text+"' | lolcat", shell=True)
+    except:
+        f = Figlet(font="speed", width=100)
+        print(f.renderText(text))
 
 class Launch:
     def __init__(self):
@@ -24,7 +29,7 @@ class Launch:
         '''
 
     def __str__(self):
-        subprocess.call("printf '"+self.message+"'")
+        subprocess.call("printf '"+self.message+"'", shell=True)
 
 def is_utf8(vcf):
     error = []

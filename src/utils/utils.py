@@ -14,7 +14,7 @@ from pyfiglet import Figlet
 # git combo FF, dossier TEST TODO
 def fancystdout(style, text):
     try:    
-        subprocess.call("/bin/bash -c 'pyfiglet -f " + style + " -w 100 " +text+"' | lolcat", shell=True)
+        subprocess.call("pyfiglet -f " + style + " -w 100 " +text+"'", shell=True)
     except:
         f = Figlet(font="speed", width=100)
         print(f.renderText(text))
@@ -29,7 +29,7 @@ class Launch:
         '''
 
     def __str__(self):
-        subprocess.call("printf '"+self.message+"'", shell=True)
+        subprocess.call("printf '"+self.message+"'")
 
 def is_utf8(vcf):
     error = []

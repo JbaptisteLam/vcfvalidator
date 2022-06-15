@@ -142,7 +142,7 @@ class Databasevar:
         for col in names:
             #col not in header annotation or and not in required columns
             if not col in dicovalues and not col in self.config['header']['all']:
-                print(f'{col} annotation missing')
+                #print(f'{col} annotation missing')
                 miss.append(col)
         return miss
 

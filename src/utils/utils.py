@@ -10,6 +10,7 @@ import re
 from itertools import zip_longest
 from tqdm import tqdm
 from pyfiglet import Figlet
+import gzip
 
 # git combo FF, dossier TEST TODO
 def fancystdout(style, text):
@@ -78,16 +79,19 @@ def explode_header(header):
             tmp = {}
             #TODO need to split before Description to avoid issues
             r = re.search('<(.*)>', desc[1]).group(1)
+            #print(r)
             try:
                 wde = re.search('(.*),Description' ,r).group(1)
             except AttributeError:
-                wde = r
+                wde = False
             #if row contain Description (it should be)
             if wde:
                 hook = wde.split(',')
+                #print(hook)
                 hook.append('Description='+re.search('Description=(.*)' ,r).group(1))
             else:
-                hook = r
+                hook = r.split(',')
+            #Becarefull if only one field
             for it in hook:
                 field = it.split('=')
                 try:
@@ -149,7 +153,7 @@ def parse_sample_field(dfVar):
 
     dfSample = pd.DataFrame(dico)
     df_bad_anno = pd.DataFrame(bad_annotation)
-    df_final = dfVar.join(dfSample, how="inner")
+    df_final = dfVar.join(dfSample, how="inner", lsuffix='_INFO', rsuffix='_SAMPLE')
     df_final.drop(columns=sample_list, inplace=True)
     return df_final, df_bad_anno, sample_list
 
@@ -251,18 +255,29 @@ def preprocess_vcf(file):
     return dico with 2 lists, header with each row from header and field which contain the vcf header field,
             and number of row of header (without field)
     """
-    data = {}
+    data = {"header": []}
     skip = []
-    with open(file, "r") as f:
-        data["header"] = []
-        for i, lines in enumerate(f):
-            if lines.split("\t")[0] != "#CHROM":
-                data["header"].append(lines.strip())
-            else:
-                # data["fields"] = lines.strip().split("\t")
-                data["fields"] = lines.strip()
-                skip.append(i)
-                break
+        #if vcf compressed
+    try:
+        gz = gzip.open(file, "rb", encoding='utf-8')
+        print(type(file.vcf))
+        print(type(gz))
+        file = gz
+    except:
+        #print(f'{args.vcf} is not gzip compressed')
+        pass
+    if isinstance(file, gzip.GzipFile):
+        f = file.read()
+    else:
+        f = open(file, 'r')
+    for i, lines in enumerate(f):
+        if lines.split("\t")[0] != "#CHROM":
+            data["header"].append(lines.strip())
+        else:
+            # data["fields"] = lines.strip().split("\t")
+            data["fields"] = lines.strip()
+            skip.append(i)
+            break
     return data, skip[0]
 
 

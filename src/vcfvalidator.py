@@ -55,13 +55,37 @@ def main():
 def main_annotate(variants, header, args, dico_args, output, config):
     #could return df if change have been done
  
-    #
+    #header modified
     if dico_args:
         headercheck = Checkheader(header, dico_args, args.config)
         hprocess = headercheck.correct_header()
 
     else:
         hprocess = header
+    
+    if args.dbname:
+        dbname = args.dbname
+    else:
+        dbname = os.path.join("dbvar", os.path.basename(args.vcf).split(".")[0] + ".db")
+    
+    if args.tablename:
+        tablename = args.tablename
+    else:
+        tablename = os.path.basename(args.vcf).split('.', 1)[0]
+
+    db = dbv(
+        variants,
+        dbname,
+        os.path.basename(args.vcf),
+        tablename,
+        config,
+        None,
+        args.database
+    )
+
+    if not db.table_exists():
+        #FROM dataframe to sql db
+        db.create_table()
 
     create_vcf(variants, hprocess, output)
 
@@ -95,7 +119,8 @@ def main_scan(variants, header, args, config):
         os.path.basename(args.vcf),
         tablename,
         config,
-        xh
+        xh,
+        args.database
     )
     if not db.table_exists():
         #FROM dataframe to sql db
@@ -106,7 +131,7 @@ def main_scan(variants, header, args, config):
     if chann:
         for items in chann:
             print("WARNING missing "+items+" in VCF header")
-    else:
+    elif not chann and "INFO" in xh:
         print("#[INFO] all variants annotations are linked with header annotation")
     
     with open('json_data.json', 'w+') as outfile:
@@ -146,7 +171,8 @@ def main_correct(variants, header, args, output, config):
         os.path.basename(args.vcf),
         tablename,
         config,
-        None
+        None,
+        args.database
     )
 
     if not db.table_exists():

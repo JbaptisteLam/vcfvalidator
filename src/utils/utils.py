@@ -11,6 +11,7 @@ from itertools import zip_longest
 from tqdm import tqdm
 from pyfiglet import Figlet
 import gzip
+import shutil
 
 # git combo FF, dossier TEST TODO
 def fancystdout(style, text):
@@ -32,11 +33,17 @@ class Launch:
     def __str__(self):
         subprocess.call("printf '"+self.message+"'")
 
+def uncompress_file(compress, uncompress):
+    with gzip.open(compress, 'r') as f_in, open(uncompress, 'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
+    return f_out
+
+
 def is_utf8(vcf):
     error = []
     with open(vcf, 'r') as f:
         for i, line in enumerate(f):
-            line = line.encode()
+            line = line.encode('utf-8')
             try:
                 line.decode('ascii')
                 #print("#[INFO] Valid utf-8")
@@ -93,7 +100,7 @@ def explode_header(header):
                 hook = r.split(',')
             #Becarefull if only one field
             for it in hook:
-                field = it.split('=')
+                field = it.split('=', 1)
                 try:
                     key = field[0]
                     value = field[1]
@@ -104,6 +111,7 @@ def explode_header(header):
                 #Check if Description field is correct
                 if key == 'Description':
                     if not value.startswith('"') or not value.endswith('"'):
+                        print("ERROR ", value)
                         error.append(lines)
             #STACK ID value as dict name and other values key pair in level -1
             if 'ID' in tmp.keys():
@@ -153,7 +161,11 @@ def parse_sample_field(dfVar):
 
     dfSample = pd.DataFrame(dico)
     df_bad_anno = pd.DataFrame(bad_annotation)
-    df_final = dfVar.join(dfSample, how="inner", lsuffix='_INFO', rsuffix='_SAMPLE')
+    try:
+        df_final = dfVar.join(dfSample, how="inner")
+    except ValueError:
+        df_final = dfVar.join(dfSample, how="inner", lsuffix='_INFO', rsuffix='_SAMPLE')
+        print("WARNING some columns are present in both INFO and SAMPLE field, add _INFO and _SAMPLE suffix")
     df_final.drop(columns=sample_list, inplace=True)
     return df_final, df_bad_anno, sample_list
 
@@ -257,27 +269,15 @@ def preprocess_vcf(file):
     """
     data = {"header": []}
     skip = []
-        #if vcf compressed
-    try:
-        gz = gzip.open(file, "rb", encoding='utf-8')
-        print(type(file.vcf))
-        print(type(gz))
-        file = gz
-    except:
-        #print(f'{args.vcf} is not gzip compressed')
-        pass
-    if isinstance(file, gzip.GzipFile):
-        f = file.read()
-    else:
-        f = open(file, 'r')
-    for i, lines in enumerate(f):
-        if lines.split("\t")[0] != "#CHROM":
-            data["header"].append(lines.strip())
-        else:
-            # data["fields"] = lines.strip().split("\t")
-            data["fields"] = lines.strip()
-            skip.append(i)
-            break
+    with open(file, "r") as f:
+        for i, lines in enumerate(f):
+            if lines.split("\t")[0] != "#CHROM":
+                data["header"].append(lines.strip())
+            else:
+                # data["fields"] = lines.strip().split("\t")
+                data["fields"] = lines.strip()
+                skip.append(i)
+                break
     return data, skip[0]
 
 

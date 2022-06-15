@@ -10,11 +10,12 @@ from utils.utils import (
     explode_header,
     is_utf8,
     fancystdout,
-    Launch
+    Launch,uncompress_file
 )
 from validator.header import Checkheader
 import json
 import pandas as pd
+import gzip
 from dbvar.database import Databasevar as dbv
 from validator.parseargs import Parseoptions
 from validator.variants import VCFpreprocess, Checkvariants
@@ -24,8 +25,13 @@ def main():
     opt = Parseoptions()
     # return options parsed in dico format and argparse.Namespace respectively
     dico_args, args = opt.get_args()
-
+    
+    if args.vcf.endswith('.gz'):
+        uncompress_file(args.vcf, '.'.join(args.vcf.split('.')[:-1]))
+        args.vcf = '.'.join(args.vcf.split('.')[:-1])
+        
     #read config
+    #print(args.vcf)
     config = read_json(args.config)
 
     # if no output specified generate vcf as input file name with correct

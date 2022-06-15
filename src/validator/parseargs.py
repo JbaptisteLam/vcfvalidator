@@ -7,6 +7,7 @@ class Parseoptions:
         self.args = self.parseargs()
 
     def extract(self):
+        print(self.args)
         if self.args.command == "Annotate":
             # for items
             dico = {"add": [], "remove": [], "edit": {}}
@@ -16,7 +17,7 @@ class Parseoptions:
                     dico["add"].append(values.split(","))
             if self.args.remove:
                 # remove row could be pass more than one row to remove format 2fields(field, ID)
-                for values in self.args.add.split(";"):
+                for values in self.args.remove.split(";"):
                     dico["remove"].append(values.split(","))
             if self.args.edit:
                 # remove row could be pass more than one row to edit format 2fields(field.ID) to find which row to edit

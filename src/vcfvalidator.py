@@ -40,6 +40,8 @@ def main():
             os.path.dirname(args.vcf),
             os.path.basename(args.vcf).split(".")[0] + "_correct.vcf",
         )
+    else:
+        output = args.output
     if os.path.exists(output):
         print("ERROR " + output + " exist remove or choose an other output filename")
         exit()
@@ -53,7 +55,7 @@ def main():
     elif args.command == "Scan":
         main_scan(variants, header, args, config)
     elif args.command == "Annotate":
-        main_annotate(variants, header, args, output, config)
+        main_annotate(variants, header, args, dico_args, output, config)
     else:
         main_test(header, config)
 
@@ -63,7 +65,8 @@ def main_annotate(variants, header, args, dico_args, output, config):
  
     #header modified
     if dico_args:
-        headercheck = Checkheader(header, dico_args, args.config)
+        print("#[INFO] Actions ", dico_args)
+        headercheck = Checkheader(header, dico_args, config)
         hprocess = headercheck.correct_header()
 
     else:

@@ -9,6 +9,7 @@ class Checkheader:
         # self.rm = self.config["remove"]
         # self.add = self.config["add"]
         self.config = trueconfig
+        print(self.config)
         # self.edit = self.config["edit"]
         # self.rmwhole = self.config["rmall"]
 
@@ -159,8 +160,9 @@ class Checkheader:
                 for key, rows in values.items():
                     self.edit_row(key, rows)
             if actions == "remove" and values:
+                print(values)
                 for rows in values:
-                    self.remove_row(*rows)
+                    self.remove_row(rows)
 
         return self.header
     

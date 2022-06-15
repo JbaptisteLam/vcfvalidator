@@ -1,5 +1,6 @@
 import argparse
 
+#Usage: python vcfvalidator.py -c ../config/trueconfig.json -i ../share/vcftest.vcf Scan
 
 class Parseoptions:
     def __init__(self):
@@ -60,6 +61,12 @@ class Parseoptions:
             type=str,
             default="basic",
             help="Output vcf with absolute path",
+        )
+        parser.add_argument(
+            "-db",
+            "--database",
+            action='store_true',
+            help="If table with same name are already present a new one will be create, set arg if you want to use an old one"
         )
         subparsers = parser.add_subparsers(dest="command")
 

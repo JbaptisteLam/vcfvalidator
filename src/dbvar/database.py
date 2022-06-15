@@ -10,7 +10,7 @@ from utils.utils import (
 )
 
 class Databasevar:
-    def __init__(self, df_variants, db, vcfname, tablename, config, header_explode):
+    def __init__(self, df_variants, db, vcfname, tablename, config, header_explode, keepdb):
         self.conn = sqlite3.connect(db)
         self.c = self.conn.cursor()
         self.vcfname = vcfname
@@ -18,6 +18,7 @@ class Databasevar:
         self.df_variants = df_variants
         self.tablename = tablename
         self.config = config
+        self.keepdb = keepdb
         try:
             self.header = header_explode[0]
         except TypeError:
@@ -45,8 +46,12 @@ class Databasevar:
         self.c.execute('SELECT name from sqlite_master where type= "table"')
         for tables in self.c.fetchall():
             if tables[0] == self.tablename:
-                print("#[INFO] Table '"+self.tablename+"' already exists, remove if the db need cleaning args TODO")
-                return True
+                print("#[INFO] Table '"+self.tablename+"' already exists")
+                if self.keepdb:
+                    print("#[INFO] Remove old '"+self.tablename+"' table in db")
+                    return False
+                else:
+                    return True
         return False
     
     def explode_annotations(self):
@@ -59,8 +64,13 @@ class Databasevar:
         #self.df_variants.to_sql(
         #    self.tablename, self.conn, if_exists="replace", index=False
         #)
-        print("#[INFO] Create Table "+self.tablename)
-        self.insert_with_progress(self.explode_annotations()[0], self.db)
+        print("#[INFO] Create Table '"+self.tablename+"'")
+        if "INFO" in self.header.keys() and "FORMAT" in self.header.keys():
+            self.insert_with_progress(self.explode_annotations()[0], self.db)
+        elif "INFO" in self.header.keys() and not "FORMAT" in self.header.keys():
+            self.insert_with_progress(parse_info_field(self.df_variants), self.db)
+        else:
+            self.insert_with_progress(self.df_variants, self.db)
 
     def chromosome_check(self):
         # request = "SELECT * FROM " + self.tablename + " WHERE #CHROM LIKE ", (chr,)
@@ -116,13 +126,24 @@ class Databasevar:
         self.c.execute("SELECT * FROM " + self.tablename)
 
     def check_annotations(self):
+        dicovalues = []
         miss = []
         curs = self.c.execute('SELECT * from '+self.tablename)
         names = [desc[0] for desc in curs.description]
+        #print(names)
+        #print(self.header.keys())
+        #print(self.config['header']['all'])
+        #print(json.dumps(self.header, indent=4))
+        for keys, val in self.header.items():
+            dicovalues.append(keys)
+            if isinstance(val, dict) and val != "Description":
+                dicovalues.extend(val.keys())
+
         for col in names:
-            if not col in self.header.keys() and not col in self.header['FORMAT'] and not col in self.header['INFO'] \
-                and not col in self.config['header']['all']:
-                miss.append(col)   
+            #col not in header annotation or and not in required columns
+            if not col in dicovalues and not col in self.config['header']['all']:
+                print(f'{col} annotation missing')
+                miss.append(col)
         return miss
 
     @staticmethod

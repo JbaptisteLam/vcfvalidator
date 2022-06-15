@@ -188,7 +188,7 @@ class Databasevar:
             #        self.edit_row(key, rows)
             if actions == "remove" and values:
                 for rows in values:
-                    self.remove_row(*rows)
+                    self.rm_row(*rows[0])
         return self.header
 
     def add_info(self):

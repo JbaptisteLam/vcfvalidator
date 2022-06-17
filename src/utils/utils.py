@@ -16,7 +16,7 @@ import shutil
 # git combo FF, dossier TEST TODO
 def fancystdout(style, text):
     try:    
-        subprocess.call("pyfiglet -f " + style + " -w 100 " +text+"'", shell=True)
+        subprocess.call("pyfiglet -f " + style + " -w 100 '" +text+"'", shell=True)
     except:
         f = Figlet(font="speed", width=100)
         print(f.renderText(text))
@@ -31,7 +31,7 @@ class Launch:
         '''
 
     def __str__(self):
-        subprocess.call("printf '"+self.message+"'")
+        subprocess.call("printf '"+self.message+"'", shell=True)
 
 def uncompress_file(compress, uncompress):
     with gzip.open(compress, 'r') as f_in, open(uncompress, 'wb') as f_out:
@@ -140,7 +140,7 @@ def parse_sample_field(dfVar):
 
     # Parsing FORMAT field in VCF
     #print("[#INFO] Parsing FORMAT field")
-    isample = list(dfVar.columns).index("FORMAT") + 1
+    isample = list(dfVar.columns).index("FORMAT")+1
     # index: line where the caller identify an event somethings
     for col in (dfVar.columns[isample:]):
         #print("#[INFO] " + col + "\n")
@@ -316,8 +316,13 @@ def cast_config(config):
 def win_to_unix(input, output):
     return systemcall('awk \'{ sub("\r$", ""); print }\' ' + input + " > " + output)
 
+def adapt_format(series, col_db):
+    #TODO
+    form = series.unique().tolist()
+    print(form)
+    pass
 
-def df_to_vcflike(df, samplename):
+def df_to_vcflike(df, samplename, col_db):
     filter_col_pos = df.columns.get_loc("FILTER")
     format_col_pos = df.columns.get_loc("FORMAT")
     dfdone = df.iloc[:, 0 : filter_col_pos + 1]
@@ -336,7 +341,7 @@ def df_to_vcflike(df, samplename):
     for t in zip_longest(*l):
         final.append(";".join(t))
     dfdone["INFO"] = final
-    dfdone["FORMAT"] = df["FORMAT"]
+    dfdone["FORMAT"] = adapt_format(df['FORMAT'], col_db)
     dfdone[samplename] = df.iloc[:, format_col_pos + 1 :].apply(
         lambda x: ":".join(x.astype(str)), axis=1
     )

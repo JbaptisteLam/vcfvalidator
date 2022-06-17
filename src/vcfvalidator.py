@@ -81,22 +81,30 @@ def main_annotate(variants, header, args, dico_args, output, config):
         tablename = args.tablename
     else:
         tablename = os.path.basename(args.vcf).split('.', 1)[0]
-
+    
+    xh = explode_header(header)
     db = dbv(
         variants,
         dbname,
         os.path.basename(args.vcf),
         tablename,
         config,
-        None,
-        args.database
+        xh,
+        args.database,
+        dico_args
     )
 
     if not db.table_exists():
         #FROM dataframe to sql db
         db.create_table()
-
-    create_vcf(variants, hprocess, output)
+    
+    #Act on variant, add, edit or remove
+    db.correct_variants()
+    dfwrite_tmp = db.db_to_dataframe()
+    print(dfwrite_tmp)
+    print(*dfwrite_tmp.columns)
+    dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin_Clinvar")
+    create_vcf(dfwrite, hprocess, output)
 
 def main_scan(variants, header, args, config):
     print("Check integrity of "+os.path.abspath(args.vcf)+" ...\n")
@@ -129,7 +137,8 @@ def main_scan(variants, header, args, config):
         tablename,
         config,
         xh,
-        args.database
+        args.database,
+        None
     )
     if not db.table_exists():
         #FROM dataframe to sql db
@@ -181,7 +190,8 @@ def main_correct(variants, header, args, output, config):
         tablename,
         config,
         None,
-        args.database
+        args.database,
+        None
     )
 
     if not db.table_exists():

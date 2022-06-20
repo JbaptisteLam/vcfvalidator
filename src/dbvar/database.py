@@ -21,11 +21,8 @@ class Databasevar:
         self.config = config
         self.keepdb = keepdb
         self.dico_args = dico_args
-        try:
-            self.header = header_explode[0]
-        except TypeError:
-            self.header = False
-        print("#[INFO] SQLite " + db + " connected ")
+        self.header = header_explode[0]
+
 
     def request(self, request):
         try:
@@ -176,7 +173,7 @@ class Databasevar:
         return res
 
     def get_col_name(self):
-        # self.c.execute('SELECT * from '+self.tablename)
+        self.c.execute('SELECT * from '+self.tablename)
         names = [description[0] for description in self.c.description]
         return names
 

@@ -66,11 +66,14 @@ class Checkheader:
         print("#[INFO] Adding " + row_add + " in header")
         self.header["header"].append(row_add)
 
-    def remove_row(self):
-        index = self.matchingline()
+    def remove_row(self, rows_id):
+        field = rows_id[0]
+        id = rows_id[1]
+        index = self.matching_line(field, id)
+        print(self.header['header'])
         if index:
-            print("#[INFO] Removing " + index + " from header")
-            del self.header[index]
+            print("#[INFO] Removing " + index[0] + " from header")
+            self.header['header'].remove(index[0])
 
     def matching_line(self, field, id):
         """

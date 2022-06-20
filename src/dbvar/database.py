@@ -8,9 +8,10 @@ from utils.utils import (
     parse_sample_field,
     parse_info_field
 )
+import pandas as pd
 
 class Databasevar:
-    def __init__(self, df_variants, db, vcfname, tablename, config, header_explode, keepdb):
+    def __init__(self, df_variants, db, vcfname, tablename, config, header_explode, keepdb, dico_args):
         self.conn = sqlite3.connect(db)
         self.c = self.conn.cursor()
         self.vcfname = vcfname
@@ -19,6 +20,7 @@ class Databasevar:
         self.tablename = tablename
         self.config = config
         self.keepdb = keepdb
+        self.dico_args = dico_args
         try:
             self.header = header_explode[0]
         except TypeError:
@@ -164,19 +166,33 @@ class Databasevar:
                 cdf.to_sql(con=con, name=self.tablename, if_exists=replace, index=False)
                 pbar.update(chunksize)
 
+    def col_exists(self, col):
+        try:
+            self.c.execute("SELECT "+col+" FROM "+self.tablename)
+            res = self.c.fetchall()
+        except:
+            print("ERROR "+ col +" does not exists in "+self.tablename+" EXIT")
+            exit()
+        return res
 
     def get_col_name(self):
-        self.c.execute('SELECT * from '+self.tablename)
+        # self.c.execute('SELECT * from '+self.tablename)
         names = [description[0] for description in self.c.description]
         return names
 
     #Edit INFO fields annotations 
     def db_to_dataframe(self):
-        return self.c.fetchall()
-    
+        return pd.read_sql("SELECT * FROM "+self.tablename, self.conn)
+
+    def addapt_format(series, col_db):
+        form = series.unique().tolist()
+        print(form)
+        pass
+
     def correct_variants(self):
         ## Act on header vcf
         # check if value are correct
+        print(self.dico_args)
         for actions, values in self.dico_args.items():
             ##if user need adding row
             #if actions == "add" and values:
@@ -187,15 +203,18 @@ class Databasevar:
             #    for key, rows in values.items():
             #        self.edit_row(key, rows)
             if actions == "remove" and values:
+                print("#[INFO] Remove ACTION")
                 for rows in values:
-                    self.rm_row(*rows[0])
-        return self.header
+                    if self.col_exists(rows[1]):
+                        self.rm_annot(rows[1])
+        #return self.header
 
-    def add_info(self):
+    def add_annot(self):
         pass
 
-    def rm_info(self, col):
+    def rm_annot(self, col):
         self.c.execute("ALTER TABLE "+self.tablename+" DROP COLUMN "+col)
+        print("#[INFO] Drop column "+col)
         self.conn.commit()
 
     def edit_info(self):

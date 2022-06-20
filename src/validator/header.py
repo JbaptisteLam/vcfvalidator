@@ -66,14 +66,8 @@ class Checkheader:
         print("#[INFO] Adding " + row_add + " in header")
         self.header["header"].append(row_add)
 
-    def remove_row(self, rows_id):
-        field = rows_id[0]
-        id = rows_id[1]
-        index = self.matching_line(field, id)
-        print(self.header['header'])
-        if index:
-            print("#[INFO] Removing " + index[0] + " from header")
-            self.header['header'].remove(index[0])
+    def remove_row(self, line):
+        self.header['header'].remove(line)
 
     def matching_line(self, field, id):
         """
@@ -163,10 +157,11 @@ class Checkheader:
                 for key, rows in values.items():
                     self.edit_row(key, rows)
             if actions == "remove" and values:
-                print(values)
                 for rows in values:
-                    self.remove_row(rows)
-
+                    if self.matching_line(rows[0], rows[1]):
+                        row = self.matching_line(rows[0], rows[1])[0]
+                        print("#[INFO] Removing " + str(rows[0]) +'/'+ str(rows[1]) + " from header")
+                        self.remove_row(row)
         return self.header
     
     def id_issues(self, lines, iterable):

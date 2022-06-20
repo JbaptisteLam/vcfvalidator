@@ -316,11 +316,10 @@ def cast_config(config):
 def win_to_unix(input, output):
     return systemcall('awk \'{ sub("\r$", ""); print }\' ' + input + " > " + output)
 
-def adapt_format(series, col_db):
-    #TODO
-    form = series.unique().tolist()
-    print(form)
-    pass
+def adapt_format(col_db):
+    index = col_db.index('FORMAT')
+    cols = ':'.join(col_db[index+1:])
+    return cols
 
 def df_to_vcflike(df, samplename, col_db):
     filter_col_pos = df.columns.get_loc("FILTER")
@@ -341,7 +340,7 @@ def df_to_vcflike(df, samplename, col_db):
     for t in zip_longest(*l):
         final.append(";".join(t))
     dfdone["INFO"] = final
-    dfdone["FORMAT"] = adapt_format(df['FORMAT'], col_db)
+    dfdone["FORMAT"] = adapt_format(col_db)
     dfdone[samplename] = df.iloc[:, format_col_pos + 1 :].apply(
         lambda x: ":".join(x.astype(str)), axis=1
     )

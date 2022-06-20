@@ -51,7 +51,7 @@ def main():
 
     # choice main func
     if args.command == "Correct":
-        main_correct(variants, header, args, output, config)
+        main_correct(variants, header, args, output, config, dico_args)
     elif args.command == "Scan":
         main_scan(variants, header, args, config)
     elif args.command == "Annotate":
@@ -101,9 +101,7 @@ def main_annotate(variants, header, args, dico_args, output, config):
     #Act on variant, add, edit or remove
     db.correct_variants()
     dfwrite_tmp = db.db_to_dataframe()
-    print(dfwrite_tmp)
-    print(*dfwrite_tmp.columns)
-    dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin_Clinvar")
+    dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin_Clinvar", db.get_col_name())
     create_vcf(dfwrite, hprocess, output)
 
 def main_scan(variants, header, args, config):
@@ -156,7 +154,7 @@ def main_scan(variants, header, args, config):
         json.dump(xh, outfile, indent=4)
 
 
-def main_correct(variants, header, args, output, config):
+def main_correct(variants, header, args, output, config, dico_args):
     print("Correct "+os.path.abspath(args.vcf)+" ...\n")
     #only if correct mode activate #TODO
     #print("Check integrity of "+args.vcf+" ...")
@@ -172,6 +170,7 @@ def main_correct(variants, header, args, output, config):
             header, config["variants"]["basic"], config
         ).correct_header()
 
+    xh = explode_header(header)
     # worked
     if args.dbname:
         dbname = args.dbname
@@ -189,9 +188,9 @@ def main_correct(variants, header, args, output, config):
         os.path.basename(args.vcf),
         tablename,
         config,
-        None,
+        xh,
         args.database,
-        None
+        dico_args
     )
 
     if not db.table_exists():
@@ -207,12 +206,12 @@ def main_correct(variants, header, args, output, config):
 
     #Generate vcf only if correction mode is enable
     #from db sql to dataframe after managing  columns contains INFO and format split so more than 10 for multisample
-    dfwrite_tmp = pd.DataFrame(db.db_to_dataframe(), columns=db.get_col_name())
-    dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin")
+    dfwrite_tmp = db.db_to_dataframe()
+    dfwrite = df_to_vcflike(dfwrite_tmp, "Likely_benin", db.get_col_name())
 
     print(dfwrite)
     #Regenerate vcf final 
-    #create_vcf(dfwrite, header, output)
+    create_vcf(dfwrite, header, output)
 
 #def main_analyze(variants, header, args, output):
 #    '''

@@ -53,6 +53,6 @@ class Checkvariants:
         if self.check_col:
             self.df["FORMAT"] = "GT:AD:DP"
             self.df[self.samplename] = "0/1:50,50:100"
-            return True
+            return self.df
         else:
             return False

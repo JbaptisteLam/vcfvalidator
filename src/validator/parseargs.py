@@ -1,6 +1,7 @@
 import argparse
 
-#Usage: python vcfvalidator.py -c ../config/trueconfig.json -i ../share/vcftest.vcf Scan
+# Usage: python vcfvalidator.py -c ../config/trueconfig.json -i ../share/vcftest.vcf Scan
+
 
 class Parseoptions:
     def __init__(self):
@@ -12,9 +13,9 @@ class Parseoptions:
             # for items
             dico = {"add": [], "remove": [], "edit": {}}
             if self.args.add:
-                # add new row could be pass more than one row to add format 5fields(field,ID,number,type,description), 5 fields and so on
+                # add new row could be pass more than one row to add format 6fields(field,ID,number,type,description,valuestoadd), 6 fields and so on
                 for values in self.args.add.split(";"):
-                    dico["add"].append(values.split(","))
+                    dico["add"].append(values.split(",", 5))
             if self.args.remove:
                 # remove row could be pass more than one row to remove format 2fields(field, ID)
                 for values in self.args.remove.split(";"):
@@ -66,8 +67,8 @@ class Parseoptions:
         parser.add_argument(
             "-db",
             "--database",
-            action='store_true',
-            help="If table with same name are already present a new one will be create, set arg if you want to use an old one"
+            action="store_true",
+            help="If table with same name are already present a new one will be create, set arg if you want to use an old one",
         )
         subparsers = parser.add_subparsers(dest="command")
 
@@ -149,12 +150,11 @@ class Parseoptions:
             help="name of table database",
         )
 
-
         args = parser.parse_args()
         return args
 
     def get_args(self):
         # print("#[INFO] args ", self.parseargs())
         # print(type(self.parseargs()))
-        #print(self.parseargs())
+        # print(self.parseargs())
         return self.extract(), self.parseargs()

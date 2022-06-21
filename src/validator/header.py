@@ -1,6 +1,7 @@
 import re
 from utils.utils import explode_header
 
+
 class Checkheader:
     def __init__(self, header_dict, dico_args, trueconfig):
         self.header = header_dict
@@ -14,15 +15,15 @@ class Checkheader:
         # self.rmwhole = self.config["rmall"]
 
     def check_integrity(self):
-        #print(self.dico_args)
+        # print(self.dico_args)
         for key, val in self.dico_args.items():
             if val:
                 if key == "edit":
                     for j, val in val.items():
-                        self.raise_integrity(j.split(".")[0], False,  False, None)
+                        self.raise_integrity(j.split(".")[0], False, False, None)
                 else:
                     for rows in val:
-                        self.raise_integrity(rows[0], False,  False, None)
+                        self.raise_integrity(rows[0], False, False, None)
 
     def raise_integrity(self, elem, rows, check, type):
         if (
@@ -38,17 +39,20 @@ class Checkheader:
                     + ",".join(self.config["header"]["extrafield"])
                 )
             else:
-                if type == 'correctvalue':
-                    #print("WARNING "+elem+" not a correct value field", self.id_issues(rows, self.header['header']))
+                if type == "correctvalue":
+                    # print("WARNING "+elem+" not a correct value field", self.id_issues(rows, self.header['header']))
                     pass
-                elif type == 'malformation':
-                    print("WARNING "+elem+" field is not correctly formated EOL", self.id_issues(rows, self.header['header']))
+                elif type == "malformation":
+                    print(
+                        "WARNING " + elem + " field is not correctly formated EOL",
+                        self.id_issues(rows, self.header["header"]),
+                    )
 
     def add_assembly(self):
         # need install of gatk
         return
 
-    def add_row(self, field, id, number, type, description, **kwargs):
+    def add_row(self, field, id, number, type, description, values):
         row_add = (
             "##"
             + field
@@ -67,7 +71,7 @@ class Checkheader:
         self.header["header"].append(row_add)
 
     def remove_row(self, line):
-        self.header['header'].remove(line)
+        self.header["header"].remove(line)
 
     def matching_line(self, field, id):
         """
@@ -160,37 +164,45 @@ class Checkheader:
                 for rows in values:
                     if self.matching_line(rows[0], rows[1]):
                         row = self.matching_line(rows[0], rows[1])[0]
-                        print("#[INFO] Removing " + str(rows[0]) +'/'+ str(rows[1]) + " from header")
+                        print(
+                            "#[INFO] Removing "
+                            + str(rows[0])
+                            + "/"
+                            + str(rows[1])
+                            + " from header"
+                        )
                         self.remove_row(row)
         return self.header
-    
+
     def id_issues(self, lines, iterable):
-        return "rows "+str(iterable.index(lines)+1)+" "+ lines
-    
+        return "rows " + str(iterable.index(lines) + 1) + " " + lines
+
     def header_check(self):
         match = []
-        #If json is malforammted it header got a problem
+        # If json is malforammted it header got a problem
         header_explode, error = explode_header(self.header)
         if error:
             for lines in error:
-                self.raise_integrity('Description', lines, True, 'malformation')
+                self.raise_integrity("Description", lines, True, "malformation")
         else:
             print("#[INFO] Header properly formated")
-        #check if field are allowed
-        for lines in self.header['header']:
+        # check if field are allowed
+        for lines in self.header["header"]:
             self._fields(lines)
             try:
                 str(lines)
             except SyntaxError:
                 match.append(self.id_issues(lines))
         return match
-    
-    def _fields(self, rows):
-        #dico_values = get_header_id(self.header, self.config)
-        #dico_values = explode_header(self.header)
-        field = re.findall(r'(?<=##)[^=]+', rows)[0]
-        #header values not in config json allowed
-        if field not in self.config["header"]["field"] and field not in self.config["header"]["extrafield"]:
-            self.raise_integrity(field, rows, True, 'correctvalue')
-            #print("WARNING "+field+" is not an allowed value ", self.id_issues(field, self.header['header']))
 
+    def _fields(self, rows):
+        # dico_values = get_header_id(self.header, self.config)
+        # dico_values = explode_header(self.header)
+        field = re.findall(r"(?<=##)[^=]+", rows)[0]
+        # header values not in config json allowed
+        if (
+            field not in self.config["header"]["field"]
+            and field not in self.config["header"]["extrafield"]
+        ):
+            self.raise_integrity(field, rows, True, "correctvalue")
+            # print("WARNING "+field+" is not an allowed value ", self.id_issues(field, self.header['header']))

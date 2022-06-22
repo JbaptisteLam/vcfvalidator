@@ -47,8 +47,8 @@ class Parseoptions:
             "-i",
             "--vcf",
             type=str,
-            required=True,
-            help="Absolute path of input file, should be vcf but may miss columns like sample or format, script will be handle this",
+            default="",
+            help="Absolute path of input file, should be vcf but may miss columns like sample or format, script will be handle this, REQUIRED",
         )
         parser.add_argument(
             "-c",
@@ -149,6 +149,45 @@ class Parseoptions:
             type=str,
             help="name of table database",
         )
+
+        # VCF Database and keep header to manipulate with other soft ------------
+
+        parser_db = subparsers.add_parser(
+            "Database",
+            help="Create DB file regarding vcf and keep header in file, <vcf>_header.txt",
+        )
+        parser_db.add_argument(
+            "-s",
+            "--save",
+            help="save header in input older extension _header.txt",
+            type=str,
+        )
+        parser_db.add_argument(
+            "-m",
+            "--merge",
+            help="header and db path to merge ex :<absoluteheader>,<absolutepathdb>",
+            type=str,
+        )
+        parser_db.add_argument(
+            "-db",
+            "--dbname",
+            type=str,
+            help="Name of variant database, if not provided it will be set at input vcf name",
+        )
+        parser_db.add_argument(
+            "-t",
+            "--tablename",
+            type=str,
+            help="name of table database",
+        )
+        parser_db.add_argument(
+            "-sn",
+            "--samplename",
+            type=str,
+            help="sample name in final header",
+        )
+        # formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        # parser_db.add_argument(        )
 
         args = parser.parse_args()
         return args

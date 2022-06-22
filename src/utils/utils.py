@@ -1,3 +1,4 @@
+import chunk
 from email import message
 from posixpath import sep
 import pandas as pd
@@ -192,11 +193,23 @@ def parse_sample_field(dfVar):
     return df_final, df_bad_anno, sample_list
 
 
+def _split(x):
+    return x.split("=")
+
+
+def get_items(iterable, choosen):
+    for items in iterable:
+        if isinstance(choosen, int):
+            yield _split(items)[choosen]
+        else:
+            yield _split(items)
+
+
 def parse_info_field(dfVar):
     """
     input: take a dataframe (from vcf)
 
-    output: return a dataframe of the vcf when the info field is parsed
+    output: return a dataframe of the vcf where the info field is parsed
     """
 
     ############
@@ -208,39 +221,90 @@ def parse_info_field(dfVar):
     dicoInfo = []
     headers = []
 
-    # print("#[INFO] Parsing INFO field")
+    # yield and generator
     for i, elems in tqdm(
         dfVar.iterrows(), total=dfVar.shape[0], desc="#[INFO] INFO column split"
     ):
         # print_progress_bar(i, len(dfVar.index)-1)
-        infoList.append([x.split("=") for x in elems["INFO"].split(";")])
-
-    # print("\n")
-
-    [headers.append(elems[0]) for ite in infoList for elems in ite]
-    dfInfo = pd.DataFrame(columns=np.unique(np.array(headers)))
-    # print(np.unique(np.array(headers)))
-
-    # print("#[INFO] From INFO field to Dataframe")
-    for j, elems in enumerate(infoList):
-        # print_progress_bar(j, len(infoList)-1)
+        infoList.append(get_items(elems["INFO"].split(";"), None))
+        headers.append(get_items(elems["INFO"].split(";"), 0))
+        # infoList.append(tmp)
+    # print(list(infoList[0]))
+    # print(list(headers[0]))
+    # exit()
+    # print(x)
+    # print(tmp)
+    # print(tmp[0])
+    # exit()
+    # AC=0
+    # [['AC', '0']]
+    # ['AC', '0']
+    def _append(elem):
         add = {}
-        for fields in elems:
+        for fields in elem:
             if len(fields) <= 1:
                 f = {fields[0]: "TRUE"}
                 add.update(f)
             else:
                 f = dict([fields])
                 add.update(f)
+        return add
 
-        dicoInfo.append(add)
+    def _get_dict(iterable):
+        for x in tqdm(iterable, total=len(iterable), desc="TMP", leave=False):
+            yield _append(x)
+
+    dicoInfo = list(_get_dict(infoList))
+    # for x in tqdm(infoList, total=len(infoList), desc="TMP dict", leave=False):
+    #    add = {}
+    #    for fields in x:
+    #        if len(fields) <= 1:
+    #            f = {fields[0]: "TRUE"}
+    #            add.update(f)
+    #        else:
+    #            f = dict([fields])
+    #            add.update(f)
+    #    dicoInfo.append(add)
+    # print(dicoInfo)
+    # print(headers)
+    # index = list(set(headers))
+    # df_final = pd.DataFrame(dicoInfo, columns=index)
+    # print(df_final.head())
+    # print(*df_final.columns)
+    # exit()
+    # print("\n")
+
+    # [headers.append(elems[0]) for ite in infoList for elems in ite]
+    # try:
+    #    index = np.unique(np.array(headers))
+    # except AttributeError:
+    index = list(set(headers))
+
+    # dfInfo = pd.DataFrame(columns=index)
+    ## print(np.unique(np.array(headers)))
+    #
+    ## print("#[INFO] From INFO field to Dataframe")
+    # for j, elems in enumerate(infoList):
+    #    # print_progress_bar(j, len(infoList)-1)
+    #    add = {}
+    #    for fields in elems:
+    #        if len(fields) <= 1:
+    #            f = {fields[0]: "TRUE"}
+    #            add.update(f)
+    #        else:
+    #            f = dict([fields])
+    #            add.update(f)
+    #
+    #    dicoInfo.append(add)
 
     # print("\n")
     # print(dicoInfo.keys())
     # print(dict(list(dicoInfo.items())[0:2]))
 
-    df_final = pd.DataFrame(dicoInfo, columns=np.unique(np.array(headers)))
-
+    df_final = pd.DataFrame(dicoInfo, columns=index)
+    print(df_final.head())
+    # print(*df_final.columns)
+    # exit()
     dfInfo = dfVar.iloc[:, :7].join(df_final, how="inner")
     # Drop old columns info
     # dfInfo.drop(columns="INFO", inplace=True)
@@ -248,6 +312,8 @@ def parse_info_field(dfVar):
     # drop possible no annotation, stack like a '.' col
     if "." in df.columns:
         df.drop(columns=".", inplace=True)
+    df_final.to_csv("test.tsv", sep="\t", index=False, header=True)
+    exit()
     return df
 
 

@@ -237,3 +237,18 @@ class Databasevar:
 
     def edit_info(self):
         pass
+
+
+class ReadDB:
+    def __init__(self, db, tablename):
+        self.conn = sqlite3.connect(db)
+        self.c = self.conn.cursor()
+        self.tablename = tablename
+
+    def db_to_dataframe(self):
+        return pd.read_sql("SELECT * FROM " + self.tablename, self.conn)
+
+    def get_col_name(self):
+        self.c.execute("SELECT * from " + self.tablename)
+        names = [description[0] for description in self.c.description]
+        return names

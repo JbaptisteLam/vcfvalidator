@@ -224,8 +224,9 @@ class Databasevar:
                 + self.tablename
                 + " ADD "
                 + row_ids[1]
-                + " CHAR(25) DEFAULT "
+                + " CHAR(25) DEFAULT '"
                 + row_ids[-1]
+                + "'"
             )
             self.conn.commit()
 

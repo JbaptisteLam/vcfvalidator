@@ -189,8 +189,6 @@ def parse_sample_field(dfVar):
             "WARNING some columns are present in both INFO and SAMPLE field, add _INFO and _SAMPLE suffix"
         )
     df_final.drop(columns=sample_list, inplace=True)
-    # Remove FORMAT col
-    df_final.drop(columns="FORMAT", inplace=True)
     return df_final, df_bad_anno, sample_list
 
 

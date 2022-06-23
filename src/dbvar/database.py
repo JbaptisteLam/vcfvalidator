@@ -30,6 +30,7 @@ class Databasevar:
         self.keepdb = keepdb
         self.dico_args = dico_args
         self.header = header_explode[0]
+        self.chrom = header_explode[1].split()
 
     def request(self, request):
         try:
@@ -71,9 +72,11 @@ class Databasevar:
         #    self.tablename, self.conn, if_exists="replace", index=False
         # )
         print("#[INFO] Create Table '" + self.tablename + "'")
-        if "INFO" in self.header.keys() and "FORMAT" in self.header.keys():
+        if "INFO" in self.chrom and "FORMAT" in self.chrom:
+            print("#[INFO] Parse INFO and SAMPLE field")
             self.insert_with_progress(self.explode_annotations()[0], self.db)
-        elif "INFO" in self.header.keys() and not "FORMAT" in self.header.keys():
+        elif "INFO" in self.chrom and not "FORMAT" in self.chrom:
+            print("#[INFO] Parse INFO field")
             self.insert_with_progress(parse_info_field(self.df_variants), self.db)
         else:
             self.insert_with_progress(self.df_variants, self.db)
@@ -178,7 +181,6 @@ class Databasevar:
         except sqlite3.OperationalError:
             print("WARNING " + col + " does not exists in " + self.tablename + " skip")
             res = []
-        print(res)
         return res
 
     def get_col_name(self):
@@ -195,15 +197,42 @@ class Databasevar:
         print(form)
         pass
 
+    def add_format_col(self):
+
+        if self.dico_args["add"]:
+            val = []
+            for items in self.dico_args:
+                val.append(items[1])
+            form = ":".join(val)
+        else:
+            form = "."
+
+        self.c.execute(
+            "ALTER TABLE "
+            + self.tablename
+            + " ADD FORMAT CHAR(25) DEFAULT '"
+            + form
+            + "'"
+        )
+        self.conn.commit()
+        pass
+
     def correct_variants(self):
         ## Act on header vcf
         # check if value are correct
         print(self.dico_args)
+
         for actions, values in self.dico_args.items():
             ##if user need adding row
             if actions == "add" and values:
                 for rows in values:
-                    self.add_annot(rows)
+                    if rows[0] == "FORMAT":
+                        if not "FORMAT" in self.get_col_name():
+                            self.add_format_col()
+                        self.add_annot(rows)
+                    else:
+                        self.add_annot(rows)
+
             # if actions == "edit" and values:
             #    for key, rows in values.items():
             #        self.edit_row(key, rows)

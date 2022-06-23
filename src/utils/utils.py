@@ -131,7 +131,7 @@ def explode_header(header):
             val = effective.split("=")
             dico[val[0]] = val[1]
     # print(json.dumps(dico, indent=4))
-    return dico, error
+    return dico, header["fields"], error
 
 
 def parse_sample_field(dfVar):
@@ -159,7 +159,7 @@ def parse_sample_field(dfVar):
             dfVar.iterrows(),
             total=dfVar.shape[0],
             leave=True,
-            desc="#[INFO] SAMPLE column split",
+            desc="#[INFO] SAMPLE " + col,
         ):
             # print_progress_bar(i, len(dfVar.index)-1)
             # print('\n')
@@ -168,6 +168,7 @@ def parse_sample_field(dfVar):
                 bad_annotation.append(pd.Series(row[:], index=dfVar.columns))
                 continue
             else:
+                # If more than on sample
                 if len(dfVar.columns[isample:]) > 1:
                     index = [col + "_" + x for x in row["FORMAT"].split(":")]
                 else:
@@ -254,7 +255,7 @@ def parse_info_field(dfVar):
         for x in tqdm(iterable, total=len(iterable), desc="TMP", leave=False):
             yield _append(x)
 
-    dicoInfo = list(_get_dict(infoList))
+    # dicoInfo = list(_get_dict(infoList))
     # for x in tqdm(infoList, total=len(infoList), desc="TMP dict", leave=False):
     #    add = {}
     #    for fields in x:
@@ -278,7 +279,7 @@ def parse_info_field(dfVar):
     # try:
     #    index = np.unique(np.array(headers))
     # except AttributeError:
-    index = list(set(headers))
+    # index = list(set(headers))
 
     # dfInfo = pd.DataFrame(columns=index)
     ## print(np.unique(np.array(headers)))
@@ -301,7 +302,7 @@ def parse_info_field(dfVar):
     # print(dicoInfo.keys())
     # print(dict(list(dicoInfo.items())[0:2]))
 
-    df_final = pd.DataFrame(dicoInfo, columns=index)
+    df_final = pd.DataFrame(_get_dict(infoList))
     print(df_final.head())
     # print(*df_final.columns)
     # exit()
@@ -312,8 +313,7 @@ def parse_info_field(dfVar):
     # drop possible no annotation, stack like a '.' col
     if "." in df.columns:
         df.drop(columns=".", inplace=True)
-    df_final.to_csv("test.tsv", sep="\t", index=False, header=True)
-    exit()
+    # df_final.to_csv("test.tsv", sep="\t", index=False, header=True)
     return df
 
 
@@ -415,7 +415,10 @@ def adapt_format(col_db):
 
 def df_to_vcflike(df, samplename, col_db):
     filter_col_pos = df.columns.get_loc("FILTER")
-    format_col_pos = df.columns.get_loc("FORMAT")
+    try:
+        format_col_pos = df.columns.get_loc("FORMAT")
+    except KeyError:
+        format_col_pos = #TODO
     dfdone = df.iloc[:, 0 : filter_col_pos + 1]
     # Recreate INFO field from dataframe resulting from db query
     final = []

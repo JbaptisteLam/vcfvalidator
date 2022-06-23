@@ -72,6 +72,8 @@ def main():
 
 def main_annotate(variants, header, args, dico_args, output, config):
     # could return df if change have been done
+    # TODO test
+    variants = variants.iloc[:5000]
 
     # header modified
     if dico_args:
@@ -92,14 +94,14 @@ def main_annotate(variants, header, args, dico_args, output, config):
     else:
         tablename = os.path.basename(args.vcf).split(".", 1)[0]
 
-    xh = explode_header(header)
+    xh, _chrom, _errs = explode_header(header)
     db = dbv(
         variants,
         dbname,
         os.path.basename(args.vcf),
         tablename,
         config,
-        xh,
+        [xh, _chrom],
         args.database,
         dico_args,
     )
@@ -125,7 +127,7 @@ def main_scan(variants, header, args, config):
         print("#[INFO] ASCII Check OK")
     Checkvariants(variants, "sample").check_col()
     Checkheader(header, {}, config).header_check()
-    xh = explode_header(header)
+    xh, _, _errs = explode_header(header)
 
     if args.dbname:
         dbname = args.dbname
@@ -177,7 +179,7 @@ def main_correct(variants, header, args, output, config, dico_args):
     if variants_new:
         Checkheader(header, config["variants"]["basic"], config).correct_header()
 
-    xh = explode_header(header)
+    xh, _, _errs = explode_header(header)
     # worked
     if args.dbname:
         dbname = args.dbname
@@ -236,7 +238,7 @@ def main_database(variants, header, args, config):
         tablename = os.path.basename(args.vcf).split(".", 1)[0]
 
     if not args.merge:
-        xh = explode_header(header)
+        xh, _, _errs = explode_header(header)
         db = dbv(
             variants,
             dbname,

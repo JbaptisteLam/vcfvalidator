@@ -413,12 +413,58 @@ def adapt_format(col_db):
     return cols
 
 
+def _concat_info(df_tmp, df, col):
+    tmp = []
+    for row in df[col]:
+        # if variant does not carry the annotation stack it at '.'
+        if row == None:
+            row = "."
+        tmp.append(str(col) + "=" + str(row))
+    return tmp
+
+
+def _recreate_info(df_tmp, df):
+    for col in df_tmp.columns:
+        yield _concat_info(df_tmp, df, col)
+
+
+def _join(iterable):
+    return ";".join(iterable)
+
+
+def _zip_longest(iterable):
+    for t in zip_longest(*iterable):
+        yield _join(t)
+
+
 def df_to_vcflike(df, samplename, col_db):
+    filter_col_pos = df.columns.get_loc("FILTER") + 1
+    try:
+        format_col_pos = df.columns.get_loc("FORMAT") + 1
+    except KeyError:
+        format_col_pos = len(df.columns) - 1
+    dfdone = df.iloc[:, 0:filter_col_pos]
+    # Recreate INFO field from dataframe resulting from db query
+
+    df_tmp = df.iloc[:, filter_col_pos:format_col_pos]
+    final = _zip_longest(list(_recreate_info(df_tmp, df)))
+
+    dfdone["INFO"] = list(final)
+    print(dfdone[["INFO"]].head())
+    if "FORMAT" in col_db:
+        dfdone["FORMAT"] = adapt_format(col_db)
+        dfdone[samplename] = df.iloc[:, format_col_pos:].apply(
+            lambda x: ":".join(x.astype(str)), axis=1
+        )
+    return dfdone
+
+
+def _df_to_vcflike(df, samplename, col_db):
     filter_col_pos = df.columns.get_loc("FILTER")
     try:
         format_col_pos = df.columns.get_loc("FORMAT")
     except KeyError:
-        format_col_pos = #TODO
+        format_col_pos = len(df.columns) - 2
     dfdone = df.iloc[:, 0 : filter_col_pos + 1]
     # Recreate INFO field from dataframe resulting from db query
     final = []

@@ -73,7 +73,7 @@ def main():
 def main_annotate(variants, header, args, dico_args, output, config):
     # could return df if change have been done
     # TODO test
-    variants = variants.iloc[:5000]
+    # variants = variants.iloc[:5000]
 
     # header modified
     if dico_args:
